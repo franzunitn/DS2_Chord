@@ -1,0 +1,5 @@
+/bin/
+/output/**
+velocity.log
+Repast.setting
+debug.log
