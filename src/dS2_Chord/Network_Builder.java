@@ -106,6 +106,19 @@ public class Network_Builder implements ContextBuilder<Object> {
 		
 		//construct a ring topology to be displayed and align the first node 
 		
+		// Place nodes in a circle in space (after adding to context)
+        double spaceSize = space.getDimensions().getHeight();
+        double center = spaceSize / 2;
+        double radius = center - 2;
+        int nodeCount = current_nodes.size();
+        for (int i = 0; i < nodeCount; i++) {
+            double theta = 2 * Math.PI * i / nodeCount;
+            double x = center + radius * Math.cos(theta);
+            double y = center + radius * Math.sin(theta);
+            space.moveTo(current_nodes.get(i), x, y);
+        }
+		
+		
 		for (Object obj : context) {
 			NdPoint pt = space.getLocation(obj);
 			grid.moveTo(obj, (int) pt.getX(), (int) pt.getY());

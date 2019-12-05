@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <parameters>
 
-	<parameter name="randomSeed" displayName="Default Random Seed" type="int" defaultValue="__NULL__" />
+	<parameter name="randomSeed" displayName="Default Random Seed" type="int" 
+		defaultValue="__NULL__"
+		isReadOnly="true"  />
 	
 	<parameter name="join_prob" displayName="Join probability of a node" type="float" 
-		defaultValue="0.1" 
+		defaultValue="0.01" 
 		isReadOnly="false" 
 		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
 	
 	<parameter name="leave_prob" displayName="leave probability of a node" type="float" 
-		defaultValue="0.1" 
+		defaultValue="0.01" 
 		isReadOnly="false" 
 		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
 	
 	<parameter name="fail_prob" displayName="Fail probability of a node" type="float" 
-		defaultValue="0.1" 
+		defaultValue="0.001" 
 		isReadOnly="false" 
 		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
 	
@@ -34,12 +36,12 @@
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 		
 	<parameter name="stabilize_tick" displayName="How much tick to wait before call stabilize" type="int" 
-		defaultValue="10" 
+		defaultValue="1" 
 		isReadOnly="false" 
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	
-	<parameter name="fixfinger_ticl" displayName="How much tick to wait before call fixfinger" type="int" 
-		defaultValue="10" 
+	<parameter name="fixfinger_tick" displayName="How much tick to wait before call fixfinger" type="int" 
+		defaultValue="1" 
 		isReadOnly="false" 
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 
