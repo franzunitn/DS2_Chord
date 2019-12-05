@@ -69,30 +69,40 @@ public class Network_Builder implements ContextBuilder<Object> {
 		
 		//Get parameters from user
 		
-		//probability of Node join the net
-		//probability of Node leave the net
-		//probability of Node fail
-		//probability of a lookup
-		//probability of an new key insertion
+		float join_prob = (Float) params.getValue("join_prob");				//probability of Node join the net
+		float leave_prob = (Float) params.getValue("leave_prob");			//probability of Node leave the net
+		float fail_prob = (Float) params.getValue("fail_prob");				//probability of Node fail
+		float lookup_prob = (Float) params.getValue("lookup_prob");			//probability of a lookup
+		float insertkey_prob = (Float) params.getValue("insertkey_prob");	//probability of an new key insertion
 		
-		//max number of nodes
-		int nodes = (Integer) params.getValue("nodes");		//max number of node in the network.
 		
-		//declaration and initialization of a super node to control the protocol
-		//pass all the probability 
-		Super_node s = new Super_node();
+		int nodes = (Integer) params.getValue("nodes");			//max number of node in the network.
+		
+		
+		int stabilize_tick = (Integer) params.getValue("stabilize_tick");		//how many tick to wait before stabilize
+		int fixfinger_tick = (Integer) params.getValue("fixfinger_tick");		//how many tick to wait before fixfinger
+		
 		
 		//create a key instance to encrypt the id of the node
 		Key k = new Key();
+		//list of nodes to pass to the super_node constructor
+		ArrayList<Node> current_nodes = new ArrayList<Node>();
+		//list of keys to be passed to the super node constructor
+		ArrayList<BigInteger> current_keys = new ArrayList<BigInteger>();
 		
-		//add the node to the context 
 		for (int i = 0; i < nodes; i++) {
+			//create the new key
+			BigInteger new_key = k.encryptThisString(Integer.toString(i)); 
+			//add the key to the list of keys
+			current_keys.add(new_key);
+			//create a new node
+			Node n = new Node(new_key);
+			//add the node to the list
+			current_nodes.add(n);
+			
 			//adding the nodes in the context
-			context.add(new Node(k.encryptThisString(Integer.toString(i))));
+			context.add(n);
 		}
-		
-
-		
 		
 		//construct a ring topology to be displayed and align the first node 
 		
@@ -101,7 +111,19 @@ public class Network_Builder implements ContextBuilder<Object> {
 			grid.moveTo(obj, (int) pt.getX(), (int) pt.getY());
 		}
 		
-		
+		//declaration and initialization of a super node to control the protocol
+		//pass all the probability 
+		Super_node s = new Super_node(join_prob, 
+									leave_prob, 
+									fail_prob, 
+									lookup_prob, 
+									insertkey_prob, 
+									nodes, 
+									current_nodes, 
+									current_keys, 
+									stabilize_tick, 
+									fixfinger_tick);
+				
 		//this is only for batch run
 		if (RunEnvironment.getInstance().isBatch()) {
 			RunEnvironment.getInstance().endAt(40);

@@ -3,7 +3,42 @@
 
 	<parameter name="randomSeed" displayName="Default Random Seed" type="int" defaultValue="__NULL__" />
 	
+	<parameter name="join_prob" displayName="Join probability of a node" type="float" 
+		defaultValue="0.1" 
+		isReadOnly="false" 
+		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
+	
+	<parameter name="leave_prob" displayName="leave probability of a node" type="float" 
+		defaultValue="0.1" 
+		isReadOnly="false" 
+		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
+	
+	<parameter name="fail_prob" displayName="Fail probability of a node" type="float" 
+		defaultValue="0.1" 
+		isReadOnly="false" 
+		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
+	
+	<parameter name="lookup_prob" displayName="lookup probability" type="float" 
+		defaultValue="0.1" 
+		isReadOnly="false" 
+		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
+	
+	<parameter name="insertkey_prob" displayName="Insert new key probability" type="float" 
+		defaultValue="0.1" 
+		isReadOnly="false" 
+		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
+	
 	<parameter name="nodes" displayName="#Nodes" type="int" 
+		defaultValue="10" 
+		isReadOnly="false" 
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+		
+	<parameter name="stabilize_tick" displayName="How much tick to wait before call stabilize" type="int" 
+		defaultValue="10" 
+		isReadOnly="false" 
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+	
+	<parameter name="fixfinger_ticl" displayName="How much tick to wait before call fixfinger" type="int" 
 		defaultValue="10" 
 		isReadOnly="false" 
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />

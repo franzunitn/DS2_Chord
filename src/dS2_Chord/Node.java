@@ -92,6 +92,18 @@ public class Node {
 		
 	}
 	
+	public void leave() {
+		
+	}
+	
+	public void fail() {
+		
+	}
+	
+	public void lookup() {
+		
+	}
+	
 	/**
 	 * find the correct successor for a message join.
 	 * if the successor is this node schedule a message with me as successor
@@ -189,15 +201,9 @@ public class Node {
 	}
 
 
-	public boolean isIs_join() {
-		return is_join;
+	public boolean is_join() {
+		return this.is_join;
 	}
-
-
-	public void setIs_join(boolean is_join) {
-		this.is_join = is_join;
-	}
-
 
 	public BigInteger getId() {
 		return id;
