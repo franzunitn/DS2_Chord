@@ -30,6 +30,7 @@ public class Node {
 	private FingerTable fingertable;
 	
 	public Node() {
+		int i = 0;
 		
 		
 	}
