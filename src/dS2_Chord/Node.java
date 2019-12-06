@@ -50,7 +50,7 @@ public class Node {
 	 * In order to join the ring MUST know a node already in the ring
 	 * @param n a node already in the ring
 	 * */ 
-	private void join(Node n, boolean is_first) {
+	public void join(Node n, boolean is_first) {
 		//check if node n is still in the ring or has fail or leave
 		if(is_first) {
 			//special case to join
@@ -115,7 +115,7 @@ public class Node {
 	 * else forward the message to the highest preceding node of my finger table
 	 * @param m the message that arrive
 	 */
-	private void on_find_successor_receive(Find_successor_message m) {
+	public void on_find_successor_receive(Find_successor_message m) {
 		
 		BigInteger target_id = m.source.getId();
 		

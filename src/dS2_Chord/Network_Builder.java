@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import dS2_Chord.StdRandom;
 import dS2_Chord.Node;
@@ -87,18 +89,18 @@ public class Network_Builder implements ContextBuilder<Object> {
 		Key k = new Key();
 		//list of nodes to pass to the super_node constructor
 		ArrayList<Node> current_nodes = new ArrayList<Node>();
-		//list of keys to be passed to the super node constructor
-		ArrayList<BigInteger> current_keys = new ArrayList<BigInteger>();
+		//Dictionary to map hash id into a more visualize integer id
+		Dictionary d = new Hashtable();
 		
 		for (int i = 0; i < nodes; i++) {
 			//create the new key
 			BigInteger new_key = k.encryptThisString(Integer.toString(i)); 
-			//add the key to the list of keys
-			current_keys.add(new_key);
 			//create a new node
 			Node n = new Node(new_key);
 			//add the node to the list
 			current_nodes.add(n);
+			//add the id into the dictionary and use the index i to represent it
+			d.put(new_key, i);
 			
 			//adding the nodes in the context
 			context.add(n);
@@ -132,10 +134,10 @@ public class Network_Builder implements ContextBuilder<Object> {
 									lookup_prob, 
 									insertkey_prob, 
 									nodes, 
-									current_nodes, 
-									current_keys, 
+									current_nodes,  
 									stabilize_tick, 
-									fixfinger_tick);
+									fixfinger_tick,
+									d);
 		
 		context.add(s);
 		
