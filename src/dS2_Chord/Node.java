@@ -68,7 +68,7 @@ public class Node {
 	}
 	
 	//method to correct successors and predecessors for concurrent operation of join 
-	private void stabilize() {
+	public void stabilize() {
 		
 	}
 	
@@ -76,7 +76,7 @@ public class Node {
 		
 	}
 	
-	private void fixFingers() {
+	public void fixFingers() {
 		
 	}
 	
@@ -100,7 +100,11 @@ public class Node {
 		
 	}
 	
-	public void lookup() {
+	public void lookup(BigInteger key) {
+		
+	}
+	
+	public void insert(BigInteger new_key) {
 		
 	}
 	

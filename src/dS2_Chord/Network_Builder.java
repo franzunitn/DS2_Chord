@@ -136,7 +136,9 @@ public class Network_Builder implements ContextBuilder<Object> {
 									current_keys, 
 									stabilize_tick, 
 									fixfinger_tick);
-				
+		
+		context.add(s);
+		
 		//this is only for batch run
 		if (RunEnvironment.getInstance().isBatch()) {
 			RunEnvironment.getInstance().endAt(40);

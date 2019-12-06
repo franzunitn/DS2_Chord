@@ -48,9 +48,9 @@ public class Super_node {
 
 	@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
-		
+		print("start step");
 		Random randomSource = new Random();
-		Context<Object> context =  ContextUtils.getContext(Node.class);
+		Context<Object> context =  ContextUtils.getContext(this);
 		IndexedIterable <Object> nodes = context.getObjects(Node.class);
 		
 		/*
@@ -71,16 +71,23 @@ public class Super_node {
 			if(StdRandom.bernoulli(this.join_prob)) {
 				//check if the we exceed the max number of node (should never be true)
 				if(this.max_number_of_nodes > this.current_nodes.size()) {
-					//there is enough space so i can add a node 
-					//get a random node already in the network 
-					int random = randomSource.nextInt(this.current_nodes.size());
-					Node target = this.current_nodes.get(random);
+					//case if the ring is empty
+					if(this.current_nodes.size() == 0) {
+						schedule_action(o, "join", null, true);
+					}else {
 					
-					//add the node to the current nodes in the network list
-					this.current_nodes.add(o);
-					
-					//schedule the join of the node in the next tick
-					schedule_action(o, "join", target);
+						//there is enough space so i can add a node 
+						//get a random node already in the network 
+						int random = randomSource.nextInt(this.current_nodes.size());
+						Node target = this.current_nodes.get(random);
+						
+						//add the node to the current nodes in the network list
+						print("Node: " + o.getId() + "has schedule a join");
+						this.current_nodes.add(o);
+						
+						//schedule the join of the node in the next tick
+						schedule_action(o, "join", target, false);
+					}
 				}
 			}
 		}
@@ -97,8 +104,9 @@ public class Super_node {
 			if(StdRandom.bernoulli(this.fail_prob)) {
 				//add the node to the going to fail list 
 				going_to_fail.add(o);
+				print("Node: " + o.getId() + "has schedule a fail");
 				//schedule the fail
-				schedule_action(o, "fail", null);
+				schedule_action(o, "fail", "", false);
 			}
 		}
 		//remove from current nodes all the nodes that are going to fail
@@ -113,8 +121,9 @@ public class Super_node {
 			if(StdRandom.bernoulli(this.leave_prob)) {
 				//add the node to the list going to leave
 				going_to_leave.add(o);
+				print("Node: " + o.getId() + "has schedule a leave");
 				//schedule the leave
-				schedule_action(o, "leave", null);
+				schedule_action(o, "leave", "", false);
 			}
 		}
 		//remove all the nodes that are going to leave
@@ -136,16 +145,18 @@ public class Super_node {
 			int random_key = randomSource.nextInt(this.keys.size());
 			BigInteger key = this.keys.get(random_key);
 			
+			print("Node: " + target.getId() + "chose to lookup key: " + key);
+			
 			//schedule the lookup for the next tick
-			schedule_action(target, "lookup", key);
+			schedule_action(target, "lookup", key, false);
 		}
 		
 		/*
 		 * extract a number of key based on probability of a new key creation
 		 * and insert them in the correct nodes
 		 * */
-		//the more keys are in the ring the less are inserted
-		int number_new_key = Math.round((Integer.MAX_VALUE - this.keys.size()) * this.insertkey_prob);
+		//TO BE DETERMINATED HOW MANY KEYS INSERT EVERY TICK
+		int number_new_key = Math.round(this.current_nodes.size() * this.insertkey_prob);
 		Key key_gen = new Key();
 		for(int i = 0; i < number_new_key; i++) {
 			//select a random node and ask him to insert the new key
@@ -155,8 +166,10 @@ public class Super_node {
 			//use the current time millis to generate a new key
 			BigInteger new_key = key_gen.encryptThisString(Long.toString(System.currentTimeMillis()));
 			
+			print("Node: " + target.getId() + "chose to insert new_key: " + new_key);
+			
 			//schedule the insertion of a new key
-			schedule_action(target, "insert", new_key);
+			schedule_action(target, "insert", new_key, false);
 		}
 		
 		/*
@@ -167,19 +180,64 @@ public class Super_node {
 		for(Node n : this.current_nodes) {
 			//check if it is the time to schedule a stabilize
 			if(tick_count % this.stabilize_tick == 0) {
-				schedule_action(n, "stabilize", null);
+				schedule_action(n, "stabilize", "", false);
+				print("Node: " + n.getId() + "schedule a stabilize");
 			}
 			//check if is the time to schedule a fixfinger
 			if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(n, "fixFinger", null);
+				schedule_action(n, "fixFinger", "", false);
+				print("Node: " + n.getId() + "schedule a fixfinger");
+
 			}
 		}
 	}
 	
-	private static void schedule_action(Node target, String method, Object parameters) {
+	private static void schedule_action(Node target, String method, Object parameters, boolean is_first) {
 		//schedule receive of a fins successor message in the next tick
 		double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + 1); 
-		RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters);
+		
+		switch(method) {
+			case "join" : 
+				if(is_first) {
+					RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters, true);
+					break;
+				}else {
+					RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters, false);
+					break;
+				}
+			case "fail" : 
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			case "leave" : 
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			case "lookup" : 
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters);
+				break;
+			case "insert" : 
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters);
+				break;
+			case "stabilize" : 
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			case "fixfinger" : 
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+				
+			default : break;
+		}
+		
+		
+		//if is the first join in the ring
+		if(is_first && method == "join") {
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters, true);
+		}else {
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters);
+		}
+	}
+	
+	private void print(String s) {
+		System.out.println(s);
 	}
 }
