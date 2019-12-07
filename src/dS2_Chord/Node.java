@@ -2,6 +2,8 @@ package dS2_Chord;
 import dS2_Chord.Find_successor_message;
 import dS2_Chord.Key;
 import dS2_Chord.Raw;
+import dS2_Chord.FingerTable;
+import dS2_Chord.Util;
 
 import java.awt.Color;
 import java.math.BigInteger;
@@ -30,20 +32,22 @@ import repast.simphony.context.Context;
 public class Node{
 
 	private BigInteger id;
+	private static final int bigIntegerBits = 160; //AKA m in the paper
 	private Node successor;
 	private Node predecessor;
-	private ArrayList<Raw> fingertable;
+	private FingerTable fingertable;
 	private boolean is_join;
-	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(160).subtract(BigInteger.ONE);
-	private int next = 0;
+	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
+	private int next;
 	
 	//Node Constructor
 	public Node(BigInteger id) {
 		this.id = id;
 		this.successor = null;
 		this.predecessor = null;
-		this.fingertable = null;
+		this.fingertable = new FingerTable(Node.bigIntegerBits, this);
 		this.is_join = false;
+		this.next = 0;
 	}
 	
 	
@@ -85,18 +89,46 @@ public class Node{
 		}
 	}
 	
+	/**
+	 * Periodic function used to update the fingher table
+	 */
 	public void fixFingers() {
-		next = next + 1;
-		if(next >= this.fingertable.size()){
-			this.next = 0;
+		this.next = this.next + 1;
+		if(next > this.bigIntegerBits){
+			this.next = 1; // Il primo elemento della fingertable è il nodo stesso e quello non deve essere modificato (credo)
 		}
-		Raw r =this.fingertable.get(next);
-		r.successor = find_successor(r.index);
+		
+		//Find the closest node to this id plus two ^ next-1, I applied the module to respect the circle
+		Node n = find_successor(this.id.add(Util.two_exponential(next-1)).mod(Node.MAX_VALUE));
+		this.fingertable.setNewNode(this.next, n);
 	}
 	
+	/**
+	 * Find the succesor of the passed id
+	 * @param i id
+	 * @return the nearest known node to the id
+	 */
 	public Node find_successor(BigInteger i){
-		//TODO process to find successor (iteratively?)
-		return null;
+		if (check_interval(this.getId(), this.successor.getId(), i)) {
+			return this.successor;
+		} else {
+			Node n_prime = closest_proceding_node(i);
+			return n_prime;
+		}
+	}
+	
+	/**
+	 * function that finde the closest proceding node looking into the fingher table
+	 * @param id id searched
+	 * @return the closest node known
+	 */
+	private Node closest_proceding_node(BigInteger id) {
+		for(int i = this.bigIntegerBits; i > 0; i--) {
+			if(check_interval(this.id, id, this.fingertable.getIndex(i))) {
+				return this.fingertable.getNode(i);
+			}
+		}
+		return this;
 	}
 	
 	private void find_predecessor() {
