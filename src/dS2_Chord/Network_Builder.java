@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -99,14 +101,29 @@ public class Network_Builder implements ContextBuilder<Object> {
 			Node n = new Node(new_key);
 			//add the node to the list
 			current_nodes.add(n);
-			//add the id into the dictionary and use the index i to represent it
-			d.put(new_key, i);
+		}
+		
+		//sort the node by key to construct the ring topology
+		Collections.sort(current_nodes, new Comparator<Node>() {
+			@Override
+			public int compare(Node o1, Node o2) {
+				return o1.getId().compareTo(o2.getId());
+			}
+		});
+		
+		int count = 0;
+		for(Node o : current_nodes) {
+			//map the key into integer in order to be better visualizable
+			d.put(o.getId(), count);
+			count++;
 			
 			//adding the nodes in the context
-			context.add(n);
+			context.add(o);
 		}
 		
 		//construct a ring topology to be displayed and align the first node 
+		//the node should be ordered from the lowest to the biggest !!
+		
 		
 		// Place nodes in a circle in space (after adding to context)
         double spaceSize = space.getDimensions().getHeight();

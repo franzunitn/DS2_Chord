@@ -1,5 +1,6 @@
 package dS2_Chord;
 import dS2_Chord.Find_successor_message;
+import dS2_Chord.Key;
 import dS2_Chord.Raw;
 
 import java.awt.Color;
@@ -26,14 +27,15 @@ import repast.simphony.visualizationOGL2D.DefaultStyleOGL2D;
 import repast.simphony.context.Context;
 
 
-public class Node {
+public class Node{
 
 	private BigInteger id;
 	private Node successor;
 	private Node predecessor;
-	private ArrayList fingertable;
+	private ArrayList<Raw> fingertable;
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(160).subtract(BigInteger.ONE);
+	private int next = 0;
 	
 	//Node Constructor
 	public Node(BigInteger id) {
@@ -64,24 +66,37 @@ public class Node {
 			//schedule the receive of a message
 			schedule_message(n, "on_find_successor_receive", m);
 		}
-		
 	}
 	
 	//method to correct successors and predecessors for concurrent operation of join 
 	public void stabilize() {
-		
+		Node x = this.successor.predecessor;
+		if(check_interval(this.id, this.successor.getId(), x.getId())) {
+			this.successor = x;
+		}
+		//schedule nothe receiving of the notification
+		schedule_action(this.successor, "notification", this);
 	}
 	
-	private void notification() {
-		
+	//method used to update our predecessor
+	private void notification(Node n) {
+		if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId())) {
+			this.predecessor = n;
+		}
 	}
 	
 	public void fixFingers() {
-		
+		next = next + 1;
+		if(next >= this.fingertable.size()){
+			this.next = 0;
+		}
+		Raw r =this.fingertable.get(next);
+		r.successor = find_successor(r.index);
 	}
 	
-	public void find_successor() {
-		
+	public Node find_successor(BigInteger i){
+		//TODO process to find successor (iteratively?)
+		return null;
 	}
 	
 	private void find_predecessor() {
@@ -89,7 +104,9 @@ public class Node {
 	}
 	
 	private void check_predecessor() {
-		
+		//TODO determine how to check if a predecessor has failed
+		//send a message and check if doesn't reply ? 
+		//check a predecessors variable ?
 	}
 	
 	public void leave() {
@@ -166,6 +183,7 @@ public class Node {
 	 */
 	private void on_receive_join_reply(Node successor) {
 		this.successor = successor;
+		//TODO initialize the finger table 
 	}
 	
 	/**
@@ -203,7 +221,10 @@ public class Node {
 		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + 1); 
 		RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, message);
 	}
-
+	
+	private static void schedule_action(Node target, String method, Object params) {
+		
+	}
 
 	public boolean is_join() {
 		return this.is_join;
@@ -249,5 +270,4 @@ public class Node {
 	private boolean bigger_than_equal(BigInteger start, BigInteger finish) {
 		return bigger_than(start, finish) || equal_than(start, finish);
 	}
-	
 }
