@@ -168,46 +168,17 @@ public class Node{
 		
 		BigInteger target_id = m.source.getId();
 		
-		//if i'm the successor of target 
-		if(equal_than(this.id, target_id)) {
-			//schedule the receive of a join reply with me as parameter
-			schedule_message(m.source, "on_receive_join_reply", this);
-			return;
-			
-		}
-		//if the target is in my interval 
-		if(check_interval(this.id, this.successor.getId(), target_id)){
-			//schedule the receive of a join reply with my successor as parameter
+		Node closest = find_successor(target_id);
+		
+		if (equal_than(this.successor.getId(), closest.getId())) {
 			schedule_message(m.source, "on_receive_join_reply", this.successor);
 			return;
 		}
-		
-		//case if i have to forward the message to a closer node
-		Node closest = closest_preceding_node(m.source);
 		
 		//forward message to closest preceding node by schedule a message Find_successor_message
 		schedule_message(closest, "on_find_successor_receive", m);
 	}
 	
-	/**
-	 * Find the closest preceding node of a node by look in this node fingertable
-	 * 
-	 * @param target the node of which we want to find the successor
-	 * @return the closest preceding node
-	 */
-	private Node closest_preceding_node(Node target) {
-		//creation of a reverse finger table to find the highest predecessor of target ID
-		ArrayList<Raw> reverse_fingertable = new ArrayList<Raw>(this.fingertable);
-		Collections.reverse(reverse_fingertable);
-		
-		for(Raw e: reverse_fingertable) {
-			if(check_interval(e.index, this.id, target.getId())) {
-				//if the target is in this interval i found the highest preceeding node
-				return e.successor;
-			}
-		}
-		return this;
-	}
 	
 	/**
 	 * After i have done the join, my correct successor notify me that he is my successor
@@ -215,7 +186,6 @@ public class Node{
 	 */
 	private void on_receive_join_reply(Node successor) {
 		this.successor = successor;
-		//TODO initialize the finger table 
 	}
 	
 	/**

@@ -27,6 +27,7 @@ public class FingerTable {
 		Raw r = new Raw(this.nodeId, this.originatorNode);
 		this.fingher.set(0, r);
 		for(int i = 1; i <= m; i++) {
+			//TODO insert mod
 			BigInteger index = this.nodeId.add(Util.two_exponential(i));
 			r = new Raw(index, this.originatorNode);
 			this.fingher.set(i, r);
