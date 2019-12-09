@@ -23,7 +23,7 @@ public class Super_node {
 	private float leave_prob;		//probability of Node leave the net
 	private float fail_prob;		//probability of Node fail
 	private float lookup_prob;		//probability of a lookup
-	private float insertkey_prob;	//probability of an new key insertion
+	private int new_keys;	//probability of an new key insertion
 	
 	private int stabilize_tick;
 	private int fix_finger_tick;
@@ -35,16 +35,17 @@ public class Super_node {
 	private ArrayList<Node> current_nodes = new ArrayList<Node>();		//current nodes in the ring (initially empty)
 	private ArrayList<Node> all_nodes;		//all the nodes added by the network builder
 	
+	private Dictionary<BigInteger, Integer> k;
 	private Dictionary<BigInteger, Integer> d;
 
-	public Super_node(float join_prob, float leave_prob, float fail_prob, float lookup_prob, float insertkey_prob,
+	public Super_node(float join_prob, float leave_prob, float fail_prob, float lookup_prob, int new_keys,
 			int max_number_of_nodes, ArrayList<Node> current_nodes,  int stabilize_tick, int fix_finger_tick,
 			Dictionary<BigInteger, Integer> d) {
 		this.join_prob = join_prob;
 		this.leave_prob = leave_prob;
 		this.fail_prob = fail_prob;
 		this.lookup_prob = lookup_prob;
-		this.insertkey_prob = insertkey_prob;
+		this.new_keys = new_keys;
 		this.max_number_of_nodes = max_number_of_nodes;
 		this.all_nodes = current_nodes;
 		this.stabilize_tick = stabilize_tick;
@@ -141,22 +142,24 @@ public class Super_node {
 		 * for every lookup chose a node randomly and ask that node to lookup for some key
 		 * that as to be in the network (or not ?)
 		 * */
-		int number_of_lookup = Math.round(this.keys.size() * this.lookup_prob);
 		//in order to lookup a key there must be keys generated and also node in the ring
 		if(this.current_nodes.size() > 0 && this.keys.size() > 0) {
-			for(int i = 0; i < number_of_lookup; i++) {
-				//select a random node to ask for the lookup
-				int random_node = randomSource.nextInt(this.current_nodes.size());
-				Node target = this.current_nodes.get(random_node);
-				
-				//select a random keys
-				int random_key = randomSource.nextInt(this.keys.size());
-				BigInteger key = this.keys.get(random_key);
-	
-				print("Node: " + d.get(target.getId()) + " chose to lookup key: " + key);
-				
-				//schedule the lookup for the next tick
-				schedule_action(target, "lookup", key, false);
+			
+			for(int i = 0; i < this.keys.size(); i++) {
+				if(StdRandom.bernoulli(this.lookup_prob)) {
+					//select a random node to ask for the lookup
+					int random_node = randomSource.nextInt(this.current_nodes.size());
+					Node target = this.current_nodes.get(random_node);
+					
+					//select a random keys
+					int random_key = randomSource.nextInt(this.keys.size());
+					BigInteger key = this.keys.get(random_key);
+					
+					print("Node: " + d.get(target.getId()) + " chose to lookup key: " + k.get(key));
+					
+					//schedule the lookup for the next tick
+					schedule_action(target, "lookup", key, false);
+				}
 			}
 		}
 		
@@ -164,22 +167,24 @@ public class Super_node {
 		 * extract a number of key based on probability of a new key creation
 		 * and insert them in the correct nodes
 		 * */
-		//TO BE DETERMINATED HOW MANY KEYS INSERT EVERY TICK
-		int number_new_key = Math.round(this.current_nodes.size() * this.insertkey_prob);
 		Key key_gen = new Key();
 		//in order to insert a new keys there must be node in the ring
 		if(this.current_nodes.size() > 0) {
-			for(int i = 0; i < number_new_key; i++) {
+			for(int i = 0; i < this.new_keys; i++) {
 				//select a random node and ask him to insert the new key
 				int random_node = randomSource.nextInt(this.current_nodes.size());
 				Node target = this.current_nodes.get(random_node);
 				
 				//use the current time millis to generate a new key
 				BigInteger new_key = key_gen.encryptThisString(Long.toString(System.currentTimeMillis()));
+				
+				//add the new key to the map dictionary
+				this.k.put(new_key, this.k.size() + +1);
+				
 				//add the new kay in the array of keys
 				this.keys.add(new_key);
 				
-				print("Node: " + d.get(target.getId()) + " chose to insert new_key: " + new_key);
+				print("Node: " + d.get(target.getId()) + " chose to insert new_key: " + this.k.get(new_key));
 				
 				//schedule the insertion of a new key
 				schedule_action(target, "insert", new_key, false);

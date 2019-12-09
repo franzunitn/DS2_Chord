@@ -25,10 +25,10 @@
 		isReadOnly="false" 
 		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
 	
-	<parameter name="insertkey_prob" displayName="Insert new key probability" type="float" 
-		defaultValue="0.1" 
+	<parameter name="new_keys" displayName="Number of insert per tick" type="int" 
+		defaultValue="5" 
 		isReadOnly="false" 
-		converter="repast.simphony.parameter.StringConverterFactory$FloatConverter" />
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	
 	<parameter name="nodes" displayName="#Nodes" type="int" 
 		defaultValue="10" 

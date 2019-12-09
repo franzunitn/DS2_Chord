@@ -77,7 +77,8 @@ public class Network_Builder implements ContextBuilder<Object> {
 		float leave_prob = (Float) params.getValue("leave_prob");			//probability of Node leave the net
 		float fail_prob = (Float) params.getValue("fail_prob");				//probability of Node fail
 		float lookup_prob = (Float) params.getValue("lookup_prob");			//probability of a lookup
-		float insertkey_prob = (Float) params.getValue("insertkey_prob");	//probability of an new key insertion
+		
+		int new_keys = (int) params.getValue("new_keys");	//probability of an new key insertion
 		
 		
 		int nodes = (Integer) params.getValue("nodes");			//max number of node in the network.
@@ -149,7 +150,7 @@ public class Network_Builder implements ContextBuilder<Object> {
 									leave_prob, 
 									fail_prob, 
 									lookup_prob, 
-									insertkey_prob, 
+									new_keys, 
 									nodes, 
 									current_nodes,  
 									stabilize_tick, 
