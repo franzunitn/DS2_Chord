@@ -26,7 +26,7 @@ public class Key {
 	       // Convert message digest into hex value 
 	       //String hashtext = no.toString(16); 
 	       
-	       return no; 
+	       return no.abs(); 
 	    } 
 	  
 	    // For specifying wrong message digest algorithms 

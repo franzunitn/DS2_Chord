@@ -4,6 +4,10 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import dS2_Chord.StdRandom;
 import dS2_Chord.Node;
@@ -87,24 +91,39 @@ public class Network_Builder implements ContextBuilder<Object> {
 		Key k = new Key();
 		//list of nodes to pass to the super_node constructor
 		ArrayList<Node> current_nodes = new ArrayList<Node>();
-		//list of keys to be passed to the super node constructor
-		ArrayList<BigInteger> current_keys = new ArrayList<BigInteger>();
+		//Dictionary to map hash id into a more visualize integer id
+		Dictionary d = new Hashtable();
 		
 		for (int i = 0; i < nodes; i++) {
 			//create the new key
 			BigInteger new_key = k.encryptThisString(Integer.toString(i)); 
-			//add the key to the list of keys
-			current_keys.add(new_key);
 			//create a new node
 			Node n = new Node(new_key);
 			//add the node to the list
 			current_nodes.add(n);
+		}
+		
+		//sort the node by key to construct the ring topology
+		Collections.sort(current_nodes, new Comparator<Node>() {
+			@Override
+			public int compare(Node o1, Node o2) {
+				return o1.getId().compareTo(o2.getId());
+			}
+		});
+		
+		int count = 0;
+		for(Node o : current_nodes) {
+			//map the key into integer in order to be better visualizable
+			d.put(o.getId(), count);
+			count++;
 			
 			//adding the nodes in the context
-			context.add(n);
+			context.add(o);
 		}
 		
 		//construct a ring topology to be displayed and align the first node 
+		//the node should be ordered from the lowest to the biggest !!
+		
 		
 		// Place nodes in a circle in space (after adding to context)
         double spaceSize = space.getDimensions().getHeight();
@@ -132,11 +151,13 @@ public class Network_Builder implements ContextBuilder<Object> {
 									lookup_prob, 
 									insertkey_prob, 
 									nodes, 
-									current_nodes, 
-									current_keys, 
+									current_nodes,  
 									stabilize_tick, 
-									fixfinger_tick);
-				
+									fixfinger_tick,
+									d);
+		
+		context.add(s);
+		
 		//this is only for batch run
 		if (RunEnvironment.getInstance().isBatch()) {
 			RunEnvironment.getInstance().endAt(40);
