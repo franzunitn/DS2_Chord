@@ -39,6 +39,7 @@ public class Node{
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
 	private int next;
+	//TODO gestire lo stato
 	
 	//Node Constructor
 	public Node(BigInteger id) {
@@ -73,8 +74,10 @@ public class Node{
 	}
 	
 	//method to correct successors and predecessors for concurrent operation of join 
+	//Mattia
+	//TODO to check
 	public void stabilize() {
-		Node x = this.successor.predecessor;
+		Node x = this.successor.predecessor; //TODO da portare a messaggio
 		if(check_interval(this.id, this.successor.getId(), x.getId())) {
 			this.successor = x;
 		}
@@ -132,7 +135,7 @@ public class Node{
 	}
 	
 	private void find_predecessor() {
-		
+		//Da usare per la stabilize per dare il mio predecessore
 	}
 	
 	private void check_predecessor() {
@@ -142,7 +145,7 @@ public class Node{
 	}
 	
 	public void leave() {
-		
+		//Andrea con anche gli stati del nodo e la comunicazione tra il super ed il nodo
 	}
 	
 	public void fail() {
@@ -195,6 +198,7 @@ public class Node{
 	 * @param target the target id to be checked
 	 * @return true if target is between start and finish
 	 */
+	//TODO inserire la possibilità di considerare o meno gli estrmi
 	private boolean check_interval(BigInteger start, BigInteger finish, BigInteger target) {
 		
 		//start has to be different from finish
