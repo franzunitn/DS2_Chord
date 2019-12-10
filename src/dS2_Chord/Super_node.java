@@ -2,6 +2,7 @@ package dS2_Chord;
 
 import dS2_Chord.Node;
 import dS2_Chord.Key;
+import dS2_Chord.Node_state;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public class Super_node {
 		ArrayList<Node> nodes_to_join = new ArrayList<Node>();
 		
 		for(Node o: this.all_nodes) {
-			if(!o.is_join()) {
+			if(o.get_state() == Node_state.INACTIVE) {
 				nodes_to_join.add(o);
 			}
 		}
@@ -213,6 +214,7 @@ public class Super_node {
 
 			}
 		}
+		print("---Finish step---");
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first) {

@@ -1,9 +1,11 @@
 package dS2_Chord;
 import dS2_Chord.Find_successor_message;
+import dS2_Chord.Find_predecessor_message;
 import dS2_Chord.Key;
 import dS2_Chord.Raw;
 import dS2_Chord.FingerTable;
 import dS2_Chord.Util;
+import dS2_Chord.Node_state;
 
 import java.awt.Color;
 import java.math.BigInteger;
@@ -39,6 +41,9 @@ public class Node{
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
 	private int next;
+	private ArrayList<BigInteger> my_keys;
+	private Node_state state;
+	
 	
 	//Node Constructor
 	public Node(BigInteger id) {
@@ -48,6 +53,7 @@ public class Node{
 		this.fingertable = new FingerTable(Node.bigIntegerBits, this);
 		this.is_join = false;
 		this.next = 0;
+		this.state = Node_state.INACTIVE;
 	}
 	
 	
@@ -57,54 +63,112 @@ public class Node{
 	 * @param n a node already in the ring
 	 * */ 
 	public void join(Node n, boolean is_first) {
-		//check if node n is still in the ring or has fail or leave
-		if(is_first) {
-			//special case to join
-			this.predecessor = null;
-			this.successor = this;
-		}else {
-			this.predecessor = null;
-			//send join message
-			Find_successor_message m = new Find_successor_message(this);
-			
-			//schedule the receive of a message
-			schedule_message(n, "on_find_successor_receive", m);
-		}
-	}
-	
-	//method to correct successors and predecessors for concurrent operation of join 
-	public void stabilize() {
-		Node x = this.successor.predecessor;
-		if(check_interval(this.id, this.successor.getId(), x.getId())) {
-			this.successor = x;
-		}
-		//schedule nothe receiving of the notification
-		schedule_action(this.successor, "notification", this);
-	}
-	
-	//method used to update our predecessor
-	private void notification(Node n) {
-		if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId())) {
-			this.predecessor = n;
+		if(!(this.state == Node_state.FAILED)) {
+			//check if node n is still in the ring or has fail or leave
+			if(is_first) {
+				//special case to join
+				this.predecessor = null;
+				this.successor = this;
+				//set the state of the node to active
+				this.state = Node_state.ACTIVE;
+			}else {
+				this.predecessor = null;
+				//send join message
+				Find_successor_message m = new Find_successor_message(this);
+				
+				//schedule the receive of a message
+				schedule_message(n, "on_find_successor_receive", m, 1);
+			}	
 		}
 	}
 	
 	/**
-	 * Periodic function used to update the fingher table
+	 * Every stabilize send a message to the successor asking for his predecessor.
+	 * if the predecessor is between this node and his successor than i set my successor
+	 * to the predecessor and that notify the node that i become his predecessor.
+	 */
+	public void stabilize() {
+		if(!(this.state == Node_state.FAILED)) {
+			//find my successor predecessor
+			Find_predecessor_message m = new Find_predecessor_message(this);
+			
+			//schedule the arrival of the message in my successor node
+			schedule_message(this.successor, "on_find_predecessor_receive", m, 1);
+		}
+	}
+	
+	/**
+	 * When receive a request from a node that want to know my predecessor 
+	 * just reply with my predecessor if is not null.
+	 * @param m the message that I receive
+	 */
+	public void on_find_predecessor_receive(Find_predecessor_message m) {
+		if(!(this.state == Node_state.FAILED)) {
+			//reply with my predecessor (if not null)
+			if(this.predecessor != null) {
+				//schedule the reception of the reply
+				schedule_message(m.source, "on_find_predecessor_reply", this, 1);
+			
+				//maybe i can set my predecessor to the node asking for that
+				this.predecessor = m.source;
+			}else {
+				//WAIT CAN BE NULL ? AND IN THIS CASE ?
+				//find predecessor of me-1 ?
+			}
+		}
+	}
+	
+	/**
+	 * A reply to a find predecessor request. 
+	 * if my successor has changed i set my successor predecessor
+	 * to my successor and than notify him.
+	 * @param x
+	 */
+	public void on_find_predecessor_reply(Node x) {
+		if(!(this.state == Node_state.FAILED)) {
+			//if the predecessor of my successor is between me and my successor 
+			//i set my successor to him and than notify him.
+			if(check_interval(this.id, this.successor.getId(), x.getId())) {
+				this.successor = x;
+			}
+			
+			//schedule the receiving of the notification
+			schedule_message(this.successor, "notification", this, 1);
+		}
+	}
+	
+	/**
+	 * The receiving of a notification means that the node before me has
+	 * discovered be so i set my predecessor to him.
+	 * @param n The node that discover that i'm his successor
+	 */
+	public void notification(Node n) {
+		if(!(this.state == Node_state.FAILED)) {
+			//check if the node that send the notification is between my predecessor and me
+			if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId())) {
+				this.predecessor = n;
+			}
+		}
+	}
+	
+	/**
+	 * Periodic function used to update the finger table
 	 */
 	public void fixFingers() {
-		this.next = this.next + 1;
-		if(next > this.bigIntegerBits){
-			this.next = 1; // Il primo elemento della fingertable è il nodo stesso e quello non deve essere modificato (credo)
+		if(!(this.state == Node_state.FAILED)) {
+			this.next = this.next + 1;
+			if(next > this.bigIntegerBits){
+				this.next = 1; // Il primo elemento della fingertable è il nodo stesso e quello non deve essere modificato (credo)
+			}
+			
+			//Find the closest node to this id plus two ^ next-1, I applied the module to respect the circle
+			Node n = find_successor(this.id.add(Util.two_exponential(next-1)).mod(Node.MAX_VALUE));
+			this.fingertable.setNewNode(this.next, n);
 		}
-		
-		//Find the closest node to this id plus two ^ next-1, I applied the module to respect the circle
-		Node n = find_successor(this.id.add(Util.two_exponential(next-1)).mod(Node.MAX_VALUE));
-		this.fingertable.setNewNode(this.next, n);
 	}
 	
 	/**
-	 * Find the succesor of the passed id
+	 * Find the successor of the passed id
 	 * @param i id
 	 * @return the nearest known node to the id
 	 */
@@ -112,17 +176,17 @@ public class Node{
 		if (check_interval(this.getId(), this.successor.getId(), i)) {
 			return this.successor;
 		} else {
-			Node n_prime = closest_proceding_node(i);
+			Node n_prime = closest_preceding_node(i);
 			return n_prime;
 		}
 	}
 	
 	/**
-	 * function that finde the closest proceding node looking into the fingher table
+	 * function that find the closest preceding node looking into the finger table
 	 * @param id id searched
 	 * @return the closest node known
 	 */
-	private Node closest_proceding_node(BigInteger id) {
+	private Node closest_preceding_node(BigInteger id) {
 		for(int i = this.bigIntegerBits; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i))) {
 				return this.fingertable.getNode(i);
@@ -131,22 +195,48 @@ public class Node{
 		return this;
 	}
 	
-	private void find_predecessor() {
-		
-	}
-	
 	private void check_predecessor() {
 		//TODO determine how to check if a predecessor has failed
 		//send a message and check if doesn't reply ? 
 		//check a predecessors variable ?
+		if(!(this.state == Node_state.FAILED)) {
+			
+		}
 	}
 	
 	public void leave() {
-		
+		if(!(this.state == Node_state.FAILED)) {
+			this.is_join = false;
+			//check if i'm the last one
+			if(this.successor.id.compareTo(this.id) == 0) {
+				this.my_keys.clear();
+			}
+			else {
+				//transfer the keys with a message of type : transfer_message
+				Transfer_message m = new Transfer_message(this, this.successor, this.my_keys);
+				//schedule the message in THIS tick
+				schedule_message(this.successor, "on_transfer_message", m, 0);
+			}
+		}
+	}
+	
+	public void on_transfer_message(Transfer_message m){
+		if(!(this.state == Node_state.FAILED)) {
+			//check if the predecessor is the sender and if it is set it to null
+			if(this.predecessor.getId().compareTo(m.source.getId()) == 0) {
+				this.predecessor = null;
+			}
+			
+			//acquire the keys
+			this.my_keys.addAll(m.keys);
+		}
 	}
 	
 	public void fail() {
-		
+		//lose all the key stored in the node
+		this.my_keys.clear();
+		//simply set the state to FAILED and stop participating in the protocol
+		this.state = Node_state.FAILED;
 	}
 	
 	public void lookup(BigInteger key) {
@@ -165,18 +255,19 @@ public class Node{
 	 * @param m the message that arrive
 	 */
 	public void on_find_successor_receive(Find_successor_message m) {
-		
-		BigInteger target_id = m.source.getId();
-		
-		Node closest = find_successor(target_id);
-		
-		if (equal_than(this.successor.getId(), closest.getId())) {
-			schedule_message(m.source, "on_receive_join_reply", this.successor);
-			return;
+		if(!(this.state == Node_state.FAILED)) {
+			BigInteger target_id = m.source.getId();
+			
+			Node closest = find_successor(target_id);
+			
+			if (equal_than(this.successor.getId(), closest.getId())) {
+				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
+				return;
+			}
+			
+			//forward message to closest preceding node by schedule a message Find_successor_message
+			schedule_message(closest, "on_find_successor_receive", m, 1);
 		}
-		
-		//forward message to closest preceding node by schedule a message Find_successor_message
-		schedule_message(closest, "on_find_successor_receive", m);
 	}
 	
 	
@@ -185,7 +276,12 @@ public class Node{
 	 * @param successor the node i have to set as successor
 	 */
 	private void on_receive_join_reply(Node successor) {
-		this.successor = successor;
+		if(!(this.state == Node_state.FAILED)) {
+			//set my successor
+			this.successor = successor;
+			//set my state to active
+			this.state = Node_state.ACTIVE;
+		}
 	}
 	
 	/**
@@ -216,16 +312,13 @@ public class Node{
 	 * @param target the node in which i want to call the method
 	 * @param method the method of node target to be called in the next tick 
 	 * @param message the parameters of the method
+	 * @param delay how many tick in advance schedule the event
 	 */
-	private static void schedule_message(Node target, String method, Object message) {
+	private static void schedule_message(Node target, String method, Object message, int delay) {
 		//schedule receive of a fins successor message in the next tick
 		double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + 1); 
+		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
 		RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, message);
-	}
-	
-	private static void schedule_action(Node target, String method, Object params) {
-		
 	}
 
 	public boolean is_join() {
@@ -236,6 +329,9 @@ public class Node{
 		return id;
 	}
 
+	public Node_state get_state() {
+		return this.state;
+	}
 
 	public void setId(BigInteger id) {
 		this.id = id;
