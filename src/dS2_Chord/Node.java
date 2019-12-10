@@ -159,6 +159,7 @@ public class Node{
 				}
 				//remove all the keys to transfer from me
 				this.mykeys.removeAll(to_transfer);
+				
 				//create a new Transfer_keys message
 				Transfer_message m = new Transfer_message(this, n, to_transfer);
 				//schedule the receiving of the transfer message
