@@ -39,6 +39,7 @@ public class Node{
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
 	private int next;
+	private ArrayList<BigInteger> mykeys;
 	//TODO gestire lo stato
 	
 	//Node Constructor
@@ -49,6 +50,7 @@ public class Node{
 		this.fingertable = new FingerTable(Node.bigIntegerBits, this);
 		this.is_join = false;
 		this.next = 0;
+		this.mykeys = new ArrayList<BigInteger>();
 	}
 	
 	
@@ -89,7 +91,25 @@ public class Node{
 	private void notification(Node n) {
 		if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId())) {
 			this.predecessor = n;
+			//send keys to the predecessor
+			tranfer_keys(n);
 		}
+	}
+	//send keys smaller or equal then the predecessor
+	public void tranfer_keys (Node target) {
+		BigInteger node_id = target.getId();
+		ArrayList<BigInteger> to_transfer = new ArrayList<BigInteger>();
+		for (BigInteger k : mykeys) {
+			if (k.compareTo(node_id) <= 0) {
+				to_transfer.add(k);
+				this.mykeys.remove(k);
+			}
+		}
+		schedule_message(target, "onreciveKeys", to_transfer);
+	}
+	
+	private void onreciveKeys (ArrayList<BigInteger> keys) {
+		this.mykeys.addAll(keys);
 	}
 	
 	/**
@@ -151,14 +171,31 @@ public class Node{
 	public void fail() {
 		
 	}
-	
+	//lookup send a messagge to the right node 
 	public void lookup(BigInteger key) {
+		Node target = find_successor(key);
+		schedule_message(target, "check_element", key);
 		
+	}
+	//check if the key is present in the node 
+	public BigInteger check_element(BigInteger key) {
+		if (this.mykeys.contains(key)) {
+			//for simulation we return only the key if present in real case will be the object associated to that key 
+			return key;
+		} else {
+			return null;
+		}
+	}
+	//find the node relaible of the key 
+	public void insert(BigInteger new_key) {
+		Node target = find_successor(new_key);
+		schedule_message(target, "addKey", new_key);
+		}
+	
+	public void addKey (BigInteger key) {
+		this.mykeys.add(key);
 	}
 	
-	public void insert(BigInteger new_key) {
-		
-	}
 	
 	/**
 	 * find the correct successor for a message join.
