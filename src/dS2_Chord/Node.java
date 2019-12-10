@@ -41,10 +41,12 @@ public class Node{
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
 	private int next;
-	private ArrayList<BigInteger> my_keys;
+
 	private Node_state state;
 	
-	
+
+	private ArrayList<BigInteger> mykeys;
+
 	//Node Constructor
 	public Node(BigInteger id) {
 		this.id = id;
@@ -54,6 +56,7 @@ public class Node{
 		this.is_join = false;
 		this.next = 0;
 		this.state = Node_state.INACTIVE;
+		this.mykeys = new ArrayList<BigInteger>();
 	}
 	
 	
@@ -117,7 +120,7 @@ public class Node{
 			}
 		}
 	}
-	
+		
 	/**
 	 * A reply to a find predecessor request. 
 	 * if my successor has changed i set my successor predecessor
@@ -136,20 +139,36 @@ public class Node{
 			schedule_message(this.successor, "notification", this, 1);
 		}
 	}
-	
+
 	/**
-	 * The receiving of a notification means that the node before me has
-	 * discovered be so i set my predecessor to him.
-	 * @param n The node that discover that i'm his successor
-	 */
-	public void notification(Node n) {
+	* The receiving of a notification means that the node before me has
+	* discovered be so i set my predecessor to him.
+	* @param n The node that discover that i'm his successor
+	*/
+	private void notification(Node n) {
 		if(!(this.state == Node_state.FAILED)) {
-			//check if the node that send the notification is between my predecessor and me
 			if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId())) {
 				this.predecessor = n;
+				//select the keys to send to my predecessor
+				BigInteger node_id = n.getId();
+				ArrayList<BigInteger> to_transfer = new ArrayList<BigInteger>();
+				for (BigInteger k : mykeys) {
+					if (k.compareTo(node_id) <= 0) {
+						to_transfer.add(k);
+					}
+				}
+				//remove all the keys to transfer from me
+				this.mykeys.removeAll(to_transfer);
+				//create a new Transfer_keys message
+				Transfer_message m = new Transfer_message(this, n, to_transfer);
+				//schedule the receiving of the transfer message
+				schedule_message(n, "on_transfer_message", m, 1);
 			}
 		}
 	}
+	
+	
+	
 	
 	/**
 	 * Periodic function used to update the finger table
@@ -195,57 +214,77 @@ public class Node{
 		return this;
 	}
 	
+
 	private void check_predecessor() {
 		//TODO determine how to check if a predecessor has failed
 		//send a message and check if doesn't reply ? 
 		//check a predecessors variable ?
 		if(!(this.state == Node_state.FAILED)) {
-			
+			if(this.predecessor != null) {
+				//some message to check the state of my predecessor
+			}
 		}
 	}
 	
 	public void leave() {
 		if(!(this.state == Node_state.FAILED)) {
-			this.is_join = false;
 			//check if i'm the last one
 			if(this.successor.id.compareTo(this.id) == 0) {
-				this.my_keys.clear();
+				this.mykeys.clear();
 			}
 			else {
 				//transfer the keys with a message of type : transfer_message
-				Transfer_message m = new Transfer_message(this, this.successor, this.my_keys);
+				Transfer_message m = new Transfer_message(this, this.successor, this.mykeys);
 				//schedule the message in THIS tick
-				schedule_message(this.successor, "on_transfer_message", m, 0);
+				schedule_message(this.successor, "on_transfer_message", m, 1);
 			}
 		}
 	}
 	
 	public void on_transfer_message(Transfer_message m){
 		if(!(this.state == Node_state.FAILED)) {
-			//check if the predecessor is the sender and if it is set it to null
-			if(this.predecessor.getId().compareTo(m.source.getId()) == 0) {
-				this.predecessor = null;
-			}
-			
 			//acquire the keys
-			this.my_keys.addAll(m.keys);
+			this.mykeys.addAll(m.keys);
 		}
+
 	}
-	
+	/**
+	 * Method used to simulate a node failure
+	 */
 	public void fail() {
 		//lose all the key stored in the node
-		this.my_keys.clear();
+		this.mykeys.clear();
 		//simply set the state to FAILED and stop participating in the protocol
 		this.state = Node_state.FAILED;
 	}
 	
+	//lookup send a message to the right node 
 	public void lookup(BigInteger key) {
+		Node target = find_successor(key);
+		schedule_message(target, "check_element", key, 1);
 		
+	}
+	//check if the key is present in the node 
+	public BigInteger check_element(BigInteger key) {
+		if (this.mykeys.contains(key)) {
+			//for simulation we return only the key if present in real case will be the object associated to that key 
+			return key;
+		} else {
+			return null;
+		}
 	}
 	
+	//find the node reliable of the key 
 	public void insert(BigInteger new_key) {
-		
+		Node target = find_successor(new_key);
+		schedule_message(target, "addKey", new_key, 1);
+		//SOULD BE USED A TRANSFER MESSAGE ?
 	}
+	
+	public void addKey (BigInteger key) {
+		this.mykeys.add(key);
+	}
+	
 	
 	/**
 	 * find the correct successor for a message join.
@@ -291,6 +330,7 @@ public class Node{
 	 * @param target the target id to be checked
 	 * @return true if target is between start and finish
 	 */
+	//TODO inserire la possibilità di considerare o meno gli estrmi
 	private boolean check_interval(BigInteger start, BigInteger finish, BigInteger target) {
 		
 		//start has to be different from finish
