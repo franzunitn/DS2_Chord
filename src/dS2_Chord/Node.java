@@ -41,6 +41,8 @@ public class Node{
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
 	private int next;
+	
+	private boolean predecessor_has_reply;
 
 	private Node_state state;
 	
@@ -57,6 +59,7 @@ public class Node{
 		this.next = 0;
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
+		this.predecessor_has_reply = false;
 	}
 	
 	
@@ -86,6 +89,44 @@ public class Node{
 	}
 	
 	/**
+	 * find the correct successor for a message join.
+	 * if the successor is this node schedule a message with me as successor
+	 * if the target is in my interval return a message with my successor as successor
+	 * else forward the message to the highest preceding node of my finger table
+	 * @param m the message that arrive
+	 */
+	public void on_find_successor_receive(Find_successor_message m) {
+		if(!(this.state == Node_state.FAILED)) {
+			BigInteger target_id = m.source.getId();
+			
+			Node closest = find_successor(target_id);
+			
+			if (equal_than(this.successor.getId(), closest.getId())) {
+				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
+				return;
+			}
+			
+			//forward message to closest preceding node by schedule a message Find_successor_message
+			schedule_message(closest, "on_find_successor_receive", m, 1);
+		}
+	}
+	
+	
+	/**
+	 * After i have done the join, my correct successor notify me that he is my successor
+	 * @param successor the node i have to set as successor
+	 */
+	private void on_receive_join_reply(Node successor) {
+		if(!(this.state == Node_state.FAILED)) {
+			//set my successor
+			this.successor = successor;
+			//set my state to active
+			this.state = Node_state.ACTIVE;
+		}
+	}
+	
+	
+	/**
 	 * Every stabilize send a message to the successor asking for his predecessor.
 	 * if the predecessor is between this node and his successor than i set my successor
 	 * to the predecessor and that notify the node that i become his predecessor.
@@ -112,8 +153,8 @@ public class Node{
 				//schedule the reception of the reply
 				schedule_message(m.source, "on_find_predecessor_reply", this, 1);
 			
-				//maybe i can set my predecessor to the node asking for that
-				this.predecessor = m.source;
+				//maybe i can set my predecessor to the node asking for that ?
+				//this.predecessor = m.source;
 			}else {
 				//WAIT CAN BE NULL ? AND IN THIS CASE ?
 				//find predecessor of me-1 ?
@@ -131,11 +172,11 @@ public class Node{
 		if(!(this.state == Node_state.FAILED)) {
 			//if the predecessor of my successor is between me and my successor 
 			//i set my successor to him and than notify him.
-			if(check_interval(this.id, this.successor.getId(), x.getId())) {
+			if(check_interval(this.id, this.successor.getId(), x.getId(), false, false)) {
 				this.successor = x;
 			}
 			
-			//schedule the receiving of the notification
+			//notify my new successor that i'm his predecessor
 			schedule_message(this.successor, "notification", this, 1);
 		}
 	}
@@ -147,7 +188,8 @@ public class Node{
 	*/
 	private void notification(Node n) {
 		if(!(this.state == Node_state.FAILED)) {
-			if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId())) {
+			if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId(), false ,false)) {
+				//set my predecessor
 				this.predecessor = n;
 				//select the keys to send to my predecessor
 				BigInteger node_id = n.getId();
@@ -167,9 +209,6 @@ public class Node{
 			}
 		}
 	}
-	
-	
-	
 	
 	/**
 	 * Periodic function used to update the finger table
@@ -193,7 +232,7 @@ public class Node{
 	 * @return the nearest known node to the id
 	 */
 	public Node find_successor(BigInteger i){
-		if (check_interval(this.getId(), this.successor.getId(), i)) {
+		if (check_interval(this.getId(), this.successor.getId(), i, false, true)) {
 			return this.successor;
 		} else {
 			Node n_prime = closest_preceding_node(i);
@@ -208,7 +247,7 @@ public class Node{
 	 */
 	private Node closest_preceding_node(BigInteger id) {
 		for(int i = this.bigIntegerBits; i > 0; i--) {
-			if(check_interval(this.id, id, this.fingertable.getIndex(i))) {
+			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
 				return this.fingertable.getNode(i);
 			}
 		}
@@ -216,14 +255,52 @@ public class Node{
 	}
 	
 
-	private void check_predecessor() {
-		//TODO determine how to check if a predecessor has failed
-		//send a message and check if doesn't reply ? 
-		//check a predecessors variable ?
+	public void check_predecessor() {
 		if(!(this.state == Node_state.FAILED)) {
 			if(this.predecessor != null) {
-				//some message to check the state of my predecessor
+				//set the predecessor check variable to inactive
+				this.predecessor_has_reply = false;
+				//than schedule a message to that node if it responds the state will change 
+				//if not that means it is failed
+				Check_predecessor_message m = new Check_predecessor_message(this, this.predecessor, Node_state.INACTIVE);
+				schedule_message(this.predecessor,"on_check_predecessor_receive", m, 1);
+				
+				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
+				schedule_message(this, "timeout_predecessor_failed", m, 4);
 			}
+		}
+	}
+	
+	public void on_check_predecessor_receive(Check_predecessor_message m) {
+		if(!(this.state == Node_state.FAILED)) {
+			//construct a message with my current state in the reply
+			Check_predecessor_message reply = new Check_predecessor_message(this, m.source, this.state);
+			//schedule the reply to the source of the request
+			schedule_message(m.source, "on_check_predecessor_reply", reply, 1);
+		}
+	}
+	
+	public void on_check_predecessor_reply(Check_predecessor_message m) {
+		if(!(this.state == Node_state.FAILED)) {
+			//set that the predecessor has replied 
+			this.predecessor_has_reply = true;
+			//the predecessor is not failed but could be inactive
+			if(m.response == Node_state.INACTIVE) {
+				//check if he is still my predecessor
+				if(m.source.getId().compareTo(this.predecessor.getId()) == 0) {
+					//the predecessor leave the network and so i set my predecessor to null
+					//will be fixed by stabilize
+					this.predecessor = null;
+				}
+			}
+		}
+	}
+	
+	public void timeout_predecessor_failed(Check_predecessor_message m) {
+		if(!(this.state == Node_state.FAILED)) {
+			//my predecessor has not reply in 4 tick so i can consider him dead
+			this.predecessor = null;
+			//after that it will be fixed by stabilize
 		}
 	}
 	
@@ -278,51 +355,14 @@ public class Node{
 	//find the node reliable of the key 
 	public void insert(BigInteger new_key) {
 		Node target = find_successor(new_key);
-		schedule_message(target, "addKey", new_key, 1);
-		//SOULD BE USED A TRANSFER MESSAGE ?
+		//create an arraylist containing only the new key
+		ArrayList<BigInteger> k = new ArrayList<BigInteger>();
+		k.add(new_key);
+		//new Transfer message with only a key
+		Transfer_message m = new Transfer_message(this, target, k);
+		schedule_message(target, "on_transfer_message", m, 1);
 	}
 	
-	public void addKey (BigInteger key) {
-		this.mykeys.add(key);
-	}
-	
-	
-	/**
-	 * find the correct successor for a message join.
-	 * if the successor is this node schedule a message with me as successor
-	 * if the target is in my interval return a message with my successor as successor
-	 * else forward the message to the highest preceding node of my finger table
-	 * @param m the message that arrive
-	 */
-	public void on_find_successor_receive(Find_successor_message m) {
-		if(!(this.state == Node_state.FAILED)) {
-			BigInteger target_id = m.source.getId();
-			
-			Node closest = find_successor(target_id);
-			
-			if (equal_than(this.successor.getId(), closest.getId())) {
-				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
-				return;
-			}
-			
-			//forward message to closest preceding node by schedule a message Find_successor_message
-			schedule_message(closest, "on_find_successor_receive", m, 1);
-		}
-	}
-	
-	
-	/**
-	 * After i have done the join, my correct successor notify me that he is my successor
-	 * @param successor the node i have to set as successor
-	 */
-	private void on_receive_join_reply(Node successor) {
-		if(!(this.state == Node_state.FAILED)) {
-			//set my successor
-			this.successor = successor;
-			//set my state to active
-			this.state = Node_state.ACTIVE;
-		}
-	}
 	
 	/**
 	 * this method given start and end of an interval return if the target is in the interval
@@ -331,20 +371,48 @@ public class Node{
 	 * @param target the target id to be checked
 	 * @return true if target is between start and finish
 	 */
-	//TODO inserire la possibilità di considerare o meno gli estrmi
-	private boolean check_interval(BigInteger start, BigInteger finish, BigInteger target) {
+	private boolean check_interval(BigInteger start, BigInteger finish, BigInteger target, boolean start_included, boolean finish_included) {
 		
 		//start has to be different from finish
 		assert(!equal_than(start, finish));
 		
 		if(bigger_than(finish, start)) {
 			//base case finish is > than start
-			return bigger_than(start, target) && less_than_equal(target, finish);
+			if(start_included) {
+				if(finish_included) {
+					return bigger_than_equal(start, target) && less_than_equal(target, finish);
+				}
+				else {
+					return bigger_than_equal(start, target) && less_than(target, finish);
+				}
+			}else {
+				if(finish_included) {
+					return bigger_than(start, target) && less_than_equal(target, finish);
+				}
+				else {
+					return bigger_than(start, target) && less_than(target, finish);
+				}
+			}
 		}else if(less_than(finish, start)) {
-			//case in which the interval contain the start of the 
-			return (bigger_than(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
-					(bigger_than_equal(target, BigInteger.ZERO) && less_than_equal(target, finish)));
+			if(start_included) {
+				if(finish_included) {
+					return (bigger_than_equal(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
+							(bigger_than_equal(target, BigInteger.ZERO) && less_than_equal(target, finish)));
+				}else {
+					return (bigger_than_equal(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
+							(bigger_than_equal(target, BigInteger.ZERO) && less_than(target, finish)));
+				}
+			}else {
+				if(finish_included) {
+					return (bigger_than(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
+							(bigger_than_equal(target, BigInteger.ZERO) && less_than_equal(target, finish)));
+				}else {
+					return (bigger_than(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
+							(bigger_than_equal(target, BigInteger.ZERO) && less_than(target, finish)));
+				}
+			}
 		}
+		
 		return false;
 	}
 	

@@ -145,7 +145,6 @@ public class Super_node {
 		 * */
 		//in order to lookup a key there must be keys generated and also node in the ring
 		if(this.current_nodes.size() > 0 && this.keys.size() > 0) {
-			
 			for(int i = 0; i < this.keys.size(); i++) {
 				if(StdRandom.bernoulli(this.lookup_prob)) {
 					//select a random node to ask for the lookup
@@ -180,7 +179,7 @@ public class Super_node {
 				BigInteger new_key = key_gen.encryptThisString(Long.toString(System.currentTimeMillis()));
 				
 				//add the new key to the map dictionary
-				this.k.put(new_key, this.k.size() + +1);
+				this.k.put(new_key, this.k.size() + 1);
 				
 				//add the new kay in the array of keys
 				this.keys.add(new_key);
