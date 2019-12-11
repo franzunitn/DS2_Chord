@@ -14,7 +14,7 @@ public class FingerTable {
 	public FingerTable(int m, Node originator) {
 		this.m = m;
 		this.nodeId = originator.getId();
-		this.fingher = new ArrayList<>(this.m+1);
+		this.fingher = new ArrayList<Raw>(this.m+1);
 		this.originatorNode = originator;
 		init_finghers();
 	}
@@ -25,12 +25,12 @@ public class FingerTable {
 	 */
 	private void init_finghers() {
 		Raw r = new Raw(this.nodeId, this.originatorNode);
-		this.fingher.set(0, r);
+		this.fingher.add(0, r);
 		for(int i = 1; i <= m; i++) {
 			//TODO insert mod
 			BigInteger index = this.nodeId.add(Util.two_exponential(i));
 			r = new Raw(index, this.originatorNode);
-			this.fingher.set(i, r);
+			this.fingher.add(i, r);
 		}
 	}
 	

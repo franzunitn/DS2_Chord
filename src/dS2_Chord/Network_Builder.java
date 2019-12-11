@@ -93,7 +93,7 @@ public class Network_Builder implements ContextBuilder<Object> {
 		//list of nodes to pass to the super_node constructor
 		ArrayList<Node> current_nodes = new ArrayList<Node>();
 		//Dictionary to map hash id into a more visualize integer id
-		Dictionary d = new Hashtable();
+		Dictionary<BigInteger, Integer> d = new Hashtable();
 		
 		for (int i = 0; i < nodes; i++) {
 			//create the new key
@@ -120,6 +120,11 @@ public class Network_Builder implements ContextBuilder<Object> {
 			
 			//adding the nodes in the context
 			context.add(o);
+		}
+		
+		//check that all the node in current_node are in order 
+		for(int i = 1; i < current_nodes.size(); i++) {
+			assert(current_nodes.get(i - 1).getId().compareTo(current_nodes.get(i).getId()) < 0);
 		}
 		
 		//construct a ring topology to be displayed and align the first node 
@@ -158,6 +163,11 @@ public class Network_Builder implements ContextBuilder<Object> {
 									d);
 		
 		context.add(s);
+		
+		//give the reference of the super node to all the nodes
+		for(Node o : current_nodes) {
+			o.snode = s;
+		}
 		
 		//this is only for batch run
 		if (RunEnvironment.getInstance().isBatch()) {

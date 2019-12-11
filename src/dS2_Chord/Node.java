@@ -46,9 +46,10 @@ public class Node{
 
 	private Node_state state;
 	
-
 	private ArrayList<BigInteger> mykeys;
 
+	public Super_node snode;
+	
 	//Node Constructor
 	public Node(BigInteger id) {
 		this.id = id;
@@ -72,16 +73,18 @@ public class Node{
 		if(!(this.state == Node_state.FAILED)) {
 			//check if node n is still in the ring or has fail or leave
 			if(is_first) {
+				print("Node: " + snode.get_mapped_id(this.id) + " has join for FIRST");
 				//special case to join
 				this.predecessor = null;
 				this.successor = this;
 				//set the state of the node to active
 				this.state = Node_state.ACTIVE;
 			}else {
+				print("Node: " + snode.get_mapped_id(this.id) + " start join procedure");
 				this.predecessor = null;
 				//send join message
 				Find_successor_message m = new Find_successor_message(this);
-				
+				print("Node: " + snode.get_mapped_id(this.id) + " has asked to " + snode.get_mapped_id(n.getId()) + " to find his successor");
 				//schedule the receive of a message
 				schedule_message(n, "on_find_successor_receive", m, 1);
 			}	
@@ -97,15 +100,21 @@ public class Node{
 	 */
 	public void on_find_successor_receive(Find_successor_message m) {
 		if(!(this.state == Node_state.FAILED)) {
+			print("Node: " + snode.get_mapped_id(this.id) + " has received a request of join from: " + 
+		snode.get_mapped_id(m.source.getId()));
+
 			BigInteger target_id = m.source.getId();
 			
 			Node closest = find_successor(target_id);
 			
 			if (equal_than(this.successor.getId(), closest.getId())) {
+				print("Node: " + snode.get_mapped_id(this.id) + " is the successor for " + 
+						snode.get_mapped_id(m.source.getId()) + " so reply to him");
 				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
 				return;
 			}
-			
+			print("Node: " + snode.get_mapped_id(this.id) + " is not the successor and foreward the request to: " + 
+					snode.get_mapped_id(closest.getId()));
 			//forward message to closest preceding node by schedule a message Find_successor_message
 			schedule_message(closest, "on_find_successor_receive", m, 1);
 		}
@@ -116,8 +125,11 @@ public class Node{
 	 * After i have done the join, my correct successor notify me that he is my successor
 	 * @param successor the node i have to set as successor
 	 */
-	private void on_receive_join_reply(Node successor) {
+	public void on_receive_join_reply(Node successor) {
 		if(!(this.state == Node_state.FAILED)) {
+			print("Node: " + snode.get_mapped_id(this.id) + " has received a join REPLY from: " + 
+					snode.get_mapped_id(successor.getId()) + " set his successor to: " +
+					snode.get_mapped_id(successor.getId()));
 			//set my successor
 			this.successor = successor;
 			//set my state to active
@@ -476,5 +488,9 @@ public class Node{
 	
 	private boolean bigger_than_equal(BigInteger start, BigInteger finish) {
 		return bigger_than(start, finish) || equal_than(start, finish);
+	}
+	
+	private void print(String s) {
+		System.out.println(s);
 	}
 }
