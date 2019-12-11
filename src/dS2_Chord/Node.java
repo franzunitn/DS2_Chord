@@ -145,6 +145,8 @@ public class Node{
 	 */
 	public void stabilize() {
 		if(!(this.state == Node_state.FAILED)) {
+			print("Node: " + snode.get_mapped_id(this.id) + " has enter the stabilize " + " send a message to: " +
+					snode.get_mapped_id(successor.getId()));
 			//find my successor predecessor
 			Find_predecessor_message m = new Find_predecessor_message(this);
 			
@@ -161,16 +163,26 @@ public class Node{
 	public void on_find_predecessor_receive(Find_predecessor_message m) {
 		if(!(this.state == Node_state.FAILED)) {
 			//reply with my predecessor (if not null)
+			Find_predecessor_reply rply;
 			if(this.predecessor != null) {
-				//schedule the reception of the reply
-				schedule_message(m.source, "on_find_predecessor_reply", this, 1);
+					print("Node: " + snode.get_mapped_id(this.id) + " receive a find prdecessor message from " +
+				snode.get_mapped_id(m.source.getId()) + " with predecessor: " + snode.get_mapped_id(this.predecessor.getId()));
+					//schedule the reception of the reply
+					rply = new Find_predecessor_reply(this.predecessor, false);
+			}
+			else {
+				print("Node: " + snode.get_mapped_id(this.id) + " receive a find prdecessor message from" +
+						snode.get_mapped_id(m.source.getId()) + " with predecessor: NULL" );
+				rply = new Find_predecessor_reply(null, true);
+			}
+			
+			
+			schedule_message(m.source, "on_find_predecessor_reply", rply, 1);
+			
 			
 				//maybe i can set my predecessor to the node asking for that ?
 				//this.predecessor = m.source;
-			}else {
-				//WAIT CAN BE NULL ? AND IN THIS CASE ?
-				//find predecessor of me-1 ?
-			}
+			
 		}
 	}
 		
@@ -180,16 +192,28 @@ public class Node{
 	 * to my successor and than notify him.
 	 * @param x
 	 */
-	public void on_find_predecessor_reply(Node x) {
+	public void on_find_predecessor_reply(Find_predecessor_reply x) {
 		if(!(this.state == Node_state.FAILED)) {
 			//if the predecessor of my successor is between me and my successor 
 			//i set my successor to him and than notify him.
-			if(check_interval(this.id, this.successor.getId(), x.getId(), false, false)) {
-				this.successor = x;
+			if(!x.is_null) {
+				
+				if(check_interval(this.id, this.successor.getId(), x.n.getId(), false, false)) {
+					this.successor = x.n;
+				}
+				
+				print("Node: " + snode.get_mapped_id(this.id) + " receive a find prdecessor REPLY with  predecessor : " +
+						snode.get_mapped_id(x.n.getId()) + " my actual successor is: " + snode.get_mapped_id(this.successor.getId()));
+			}
+			else {
+				print("Node: " + snode.get_mapped_id(this.id) + " receive a find prdecessor REPLY with  predecessor : " +
+						" NULL " + " my actual successor is: " + snode.get_mapped_id(this.successor.getId()));
+			}
+			//notify my new successor that i'm his predecessor
+			if(this.successor.getId().compareTo(this.id) != 0) {
+				schedule_message(this.successor, "notification", this, 1);
 			}
 			
-			//notify my new successor that i'm his predecessor
-			schedule_message(this.successor, "notification", this, 1);
 		}
 	}
 
@@ -203,6 +227,11 @@ public class Node{
 			if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId(), false ,false)) {
 				//set my predecessor
 				this.predecessor = n;
+				
+				print("Node: " + snode.get_mapped_id(this.id) + " receive a notification with a new  predecessor : " +
+						snode.get_mapped_id(n.getId()) + " my actual predecessor is: " + snode.get_mapped_id(this.predecessor.getId()));
+				
+				
 				//select the keys to send to my predecessor
 				BigInteger node_id = n.getId();
 				ArrayList<BigInteger> to_transfer = new ArrayList<BigInteger>();
@@ -228,12 +257,18 @@ public class Node{
 	public void fixFingers() {
 		if(!(this.state == Node_state.FAILED)) {
 			this.next = this.next + 1;
+			print("Node: " + snode.get_mapped_id(this.id) + " start a fixfinger with next :  " +
+					this.next );
+			
 			if(next > this.bigIntegerBits){
 				this.next = 1; // Il primo elemento della fingertable è il nodo stesso e quello non deve essere modificato (credo)
 			}
 			
 			//Find the closest node to this id plus two ^ next-1, I applied the module to respect the circle
 			Node n = find_successor(this.id.add(Util.two_exponential(next-1)).mod(Node.MAX_VALUE));
+			print("Node: " + snode.get_mapped_id(this.id) + "after find successor, found: " +
+					snode.get_mapped_id(n.getId()) );
+			
 			this.fingertable.setNewNode(this.next, n);
 		}
 	}

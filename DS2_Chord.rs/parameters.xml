@@ -13,7 +13,7 @@
 									
 		/>
 				<parameter name="fixfinger_tick" displayName="How much tick to wait before call fixfinger" type="int" 
-						defaultValue="5000000" 
+						defaultValue="2" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
@@ -25,7 +25,7 @@
 									
 		/>
 				<parameter name="stabilize_tick" displayName="How much tick to wait before call stabilize" type="int" 
-						defaultValue="1000000" 
+						defaultValue="2" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									

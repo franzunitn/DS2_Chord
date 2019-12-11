@@ -38,6 +38,8 @@ public class Super_node {
 	
 	private Dictionary<BigInteger, Integer> k;
 	private Dictionary<BigInteger, Integer> d;
+	
+	private boolean test = false;
 
 	public Super_node(float join_prob, float leave_prob, float fail_prob, float lookup_prob, int new_keys,
 			int max_number_of_nodes, ArrayList<Node> current_nodes,  int stabilize_tick, int fix_finger_tick,
@@ -52,9 +54,11 @@ public class Super_node {
 		this.stabilize_tick = stabilize_tick;
 		this.fix_finger_tick = fix_finger_tick;
 		this.d = d;
+		
+		this.test = false;
 	}
 
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -104,7 +108,7 @@ public class Super_node {
 							this.current_nodes.add(o);
 							
 							//schedule the join of the node in the next tick
-							schedule_action(o, "join", target, false, 1);
+							schedule_action(o, "join", target, false, 10);
 						}
 					}
 				}
@@ -207,7 +211,7 @@ public class Super_node {
 		//get the current tick
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		
-		for(Node o : this.current_nodes) {
+		for(Node o : active_nodes) {
 			//check if it is the time to schedule a stabilize
 			if(tick_count % this.stabilize_tick == 0) {
 				//this is created because i dont'know why if i pass null throw an error
@@ -224,6 +228,53 @@ public class Super_node {
 			}
 		}
 		print("---Finish step---");
+		
+	}
+	
+	@ScheduledMethod (start = 1, interval = 1)
+	public void simple_test() {
+		/**
+		 * test di join 10 tick delay one from another 
+		 * all nodes make join
+		 */
+		if(!this.test) {
+			this.test = true;
+			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
+			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 30);
+			schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(1), false, 40);
+			schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(1), false, 50);
+			schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(2), false, 60);
+			schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(2), false, 70);
+			schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(3), false, 80);
+			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(3), false, 90);
+		}
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			if(o.get_state() == Node_state.ACTIVE) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				//this is created because i dont'know why if i pass null throw an error
+				Object a = new Object();
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			//check if is the time to schedule a fixfinger
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFinger", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a fixfinger");
+
+			}
+		}
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
@@ -274,4 +325,6 @@ public class Super_node {
 	public int get_mapped_key(BigInteger k_id) {
 		return this.k.get(k_id);
 	}
+	
+	
 }

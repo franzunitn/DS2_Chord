@@ -7,25 +7,25 @@
 									
 		/>
 				<parameter name="join_prob" displayName="Join probability of a node" type="float" 
-						defaultValue="0.9" 
+						defaultValue="0.1" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$FloatConverter"
 									
 		/>
 				<parameter name="fixfinger_tick" displayName="How much tick to wait before call fixfinger" type="int" 
-						defaultValue="5" 
+						defaultValue="5000000" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
 		/>
 				<parameter name="nodes" displayName="#Nodes" type="int" 
-						defaultValue="3" 
+						defaultValue="10" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
 		/>
 				<parameter name="stabilize_tick" displayName="How much tick to wait before call stabilize" type="int" 
-						defaultValue="10" 
+						defaultValue="1000000" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
