@@ -24,7 +24,7 @@ public class Super_node {
 	private float leave_prob;		//probability of Node leave the net
 	private float fail_prob;		//probability of Node fail
 	private float lookup_prob;		//probability of a lookup
-	private int new_keys;	//probability of an new key insertion
+	private int new_keys;			//probability of an new key insertion
 	
 	private int stabilize_tick;
 	private int fix_finger_tick;
@@ -38,6 +38,8 @@ public class Super_node {
 	
 	private Dictionary<BigInteger, Integer> k;
 	private Dictionary<BigInteger, Integer> d;
+	
+	private boolean test = false;
 
 	public Super_node(float join_prob, float leave_prob, float fail_prob, float lookup_prob, int new_keys,
 			int max_number_of_nodes, ArrayList<Node> current_nodes,  int stabilize_tick, int fix_finger_tick,
@@ -52,9 +54,11 @@ public class Super_node {
 		this.stabilize_tick = stabilize_tick;
 		this.fix_finger_tick = fix_finger_tick;
 		this.d = d;
+		
+		this.test = false;
 	}
 
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -66,9 +70,17 @@ public class Super_node {
 		 * */
 		//search all nodes that are or not in the network
 		ArrayList<Node> nodes_to_join = new ArrayList<Node>();
+		//all the nodes that are already active in this tick
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
 		
 		for(Node o: this.all_nodes) {
-			if(o.get_state() == Node_state.INACTIVE) {
+			if(o.get_state() == Node_state.ACTIVE) {
+				active_nodes.add(o);
+			}
+		}
+		
+		for(Node o: this.all_nodes) {
+			if(o.get_state() == Node_state.INACTIVE && !current_nodes.contains(o)) {
 				nodes_to_join.add(o);
 			}
 		}
@@ -83,19 +95,21 @@ public class Super_node {
 						//add the node in the current_nodes list
 						this.current_nodes.add(o);
 						//schedule the join of the node
-						schedule_action(o, "join", o, true);
+						schedule_action(o, "join", o, true, 1);
 					}else {
-						//there is enough space so i can add a node 
-						//get a random node already in the network 
-						int random = randomSource.nextInt(this.current_nodes.size());
-						Node target = this.current_nodes.get(random);
-						
-						//add the node to the current nodes in the network list
-						print("Node: " + d.get(o.getId()) + " has schedule a join");
-						this.current_nodes.add(o);
-						
-						//schedule the join of the node in the next tick
-						schedule_action(o, "join", target, false);
+						if(active_nodes.size() > 0) {
+							//there is enough space so i can add a node 
+							//get a random node already in the network 
+							int random = randomSource.nextInt(active_nodes.size());
+							Node target = active_nodes.get(random);
+							
+							//add the node to the current nodes in the network list
+							print("Node: " + d.get(o.getId()) + " has schedule a join");
+							this.current_nodes.add(o);
+							
+							//schedule the join of the node in the next tick
+							schedule_action(o, "join", target, false, 10);
+						}
 					}
 				}
 			}
@@ -115,7 +129,7 @@ public class Super_node {
 				going_to_fail.add(o);
 				print("Node: " + d.get(o.getId()) + " has schedule a fail");
 				//schedule the fail
-				schedule_action(o, "fail", "", false);
+				schedule_action(o, "fail", "", false, 1);
 			}
 		}
 		//remove from current nodes all the nodes that are going to fail
@@ -132,7 +146,7 @@ public class Super_node {
 				going_to_leave.add(o);
 				print("Node: " + d.get(o.getId()) + " has schedule a leave");
 				//schedule the leave
-				schedule_action(o, "leave", "", false);
+				schedule_action(o, "leave", "", false, 1);
 			}
 		}
 		//remove all the nodes that are going to leave
@@ -158,7 +172,7 @@ public class Super_node {
 					print("Node: " + d.get(target.getId()) + " chose to lookup key: " + k.get(key));
 					
 					//schedule the lookup for the next tick
-					schedule_action(target, "lookup", key, false);
+					schedule_action(target, "lookup", key, false, 1);
 				}
 			}
 		}
@@ -187,7 +201,7 @@ public class Super_node {
 				print("Node: " + d.get(target.getId()) + " chose to insert new_key: " + this.k.get(new_key));
 				
 				//schedule the insertion of a new key
-				schedule_action(target, "insert", new_key, false);
+				schedule_action(target, "insert", new_key, false, 1);
 			}
 		}
 		
@@ -197,29 +211,76 @@ public class Super_node {
 		//get the current tick
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		
-		for(Node o : this.current_nodes) {
+		for(Node o : active_nodes) {
 			//check if it is the time to schedule a stabilize
 			if(tick_count % this.stabilize_tick == 0) {
 				//this is created because i dont'know why if i pass null throw an error
 				Object a = new Object();
 				
-				schedule_action(o, "stabilize", a, false);
+				schedule_action(o, "stabilize", a, false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
 			}
 			//check if is the time to schedule a fixfinger
 			if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(o, "fixFinger", "", false);
+				schedule_action(o, "fixFinger", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a fixfinger");
 
 			}
 		}
 		print("---Finish step---");
+		
 	}
 	
-	private static void schedule_action(Node target, String method, Object parameters , boolean is_first) {
+	@ScheduledMethod (start = 1, interval = 1)
+	public void simple_test() {
+		/**
+		 * test di join 10 tick delay one from another 
+		 * all nodes make join
+		 */
+		if(!this.test) {
+			this.test = true;
+			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
+			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 30);
+			schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(1), false, 40);
+			schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(1), false, 50);
+			schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(2), false, 60);
+			schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(2), false, 70);
+			schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(3), false, 80);
+			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(3), false, 90);
+		}
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			if(o.get_state() == Node_state.ACTIVE) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				//this is created because i dont'know why if i pass null throw an error
+				Object a = new Object();
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			//check if is the time to schedule a fixfinger
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFinger", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a fixfinger");
+
+			}
+		}
+	}
+	
+	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
 		//schedule receive of a fins successor message in the next tick
 		double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + 1); 
+		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
 		
 		switch(method) {
 			case "join" : 
@@ -256,4 +317,14 @@ public class Super_node {
 	private void print(String s) {
 		System.out.println(s);
 	}
+	
+	public int get_mapped_id(BigInteger id) {
+		return this.d.get(id);
+	}
+	
+	public int get_mapped_key(BigInteger k_id) {
+		return this.k.get(k_id);
+	}
+	
+	
 }
