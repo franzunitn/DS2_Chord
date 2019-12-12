@@ -145,13 +145,17 @@ public class Node{
 	 */
 	public void stabilize() {
 		if(!(this.state == Node_state.FAILED)) {
-			print("Node: " + snode.get_mapped_id(this.id) + " has enter the stabilize " + " send a message to: " +
-					snode.get_mapped_id(successor.getId()));
-			//find my successor predecessor
-			Find_predecessor_message m = new Find_predecessor_message(this);
+			if(this.id.compareTo(this.successor.getId()) != 0) {
+				print("Node: " + snode.get_mapped_id(this.id) + " has enter the stabilize " + " send a message to: " +
+						snode.get_mapped_id(successor.getId()));
+				
+				//find my successor predecessor
+				Find_predecessor_message m = new Find_predecessor_message(this);
+				
+				//schedule the arrival of the message in my successor node
+				schedule_message(this.successor, "on_find_predecessor_receive", m, 1);
+			}
 			
-			//schedule the arrival of the message in my successor node
-			schedule_message(this.successor, "on_find_predecessor_receive", m, 1);
 		}
 	}
 	
@@ -199,6 +203,7 @@ public class Node{
 			if(!x.is_null) {
 				
 				if(check_interval(this.id, this.successor.getId(), x.n.getId(), false, false)) {
+					print("Node: " + snode.get_mapped_id(this.id) + " check interval and has set his successor to: " + snode.get_mapped_id(x.n.getId()));
 					this.successor = x.n;
 				}
 				
@@ -213,7 +218,6 @@ public class Node{
 			if(this.successor.getId().compareTo(this.id) != 0) {
 				schedule_message(this.successor, "notification", this, 1);
 			}
-			
 		}
 	}
 
@@ -222,7 +226,7 @@ public class Node{
 	* discovered be so i set my predecessor to him.
 	* @param n The node that discover that i'm his successor
 	*/
-	private void notification(Node n) {
+	public void notification(Node n) {
 		if(!(this.state == Node_state.FAILED)) {
 			if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId(), false ,false)) {
 				//set my predecessor
@@ -420,47 +424,26 @@ public class Node{
 	 */
 	private boolean check_interval(BigInteger start, BigInteger finish, BigInteger target, boolean start_included, boolean finish_included) {
 		
-		//start has to be different from finish
-		assert(!equal_than(start, finish));
 		
-		if(bigger_than(finish, start)) {
-			//base case finish is > than start
-			if(start_included) {
-				if(finish_included) {
-					return bigger_than_equal(start, target) && less_than_equal(target, finish);
-				}
-				else {
-					return bigger_than_equal(start, target) && less_than(target, finish);
-				}
-			}else {
-				if(finish_included) {
-					return bigger_than(start, target) && less_than_equal(target, finish);
-				}
-				else {
-					return bigger_than(start, target) && less_than(target, finish);
-				}
-			}
-		}else if(less_than(finish, start)) {
-			if(start_included) {
-				if(finish_included) {
-					return (bigger_than_equal(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
-							(bigger_than_equal(target, BigInteger.ZERO) && less_than_equal(target, finish)));
-				}else {
-					return (bigger_than_equal(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
-							(bigger_than_equal(target, BigInteger.ZERO) && less_than(target, finish)));
-				}
-			}else {
-				if(finish_included) {
-					return (bigger_than(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
-							(bigger_than_equal(target, BigInteger.ZERO) && less_than_equal(target, finish)));
-				}else {
-					return (bigger_than(target, finish) && less_than_equal(target, this.MAX_VALUE) || 
-							(bigger_than_equal(target, BigInteger.ZERO) && less_than(target, finish)));
-				}
-			}
+		if(start_included && start.compareTo(target) == 0) {
+			return true;
 		}
 		
-		return false;
+		if(finish_included && finish.compareTo(target) == 0) {
+			return true;
+		}
+		
+		if(start.compareTo(finish) == 0) {
+			return false;
+		}
+		
+		//inizio fine target incluso inizio incluso fine
+		if(start.compareTo(finish) < 0) {
+			//caso base
+			return (start.compareTo(target) < 0) && (finish.compareTo(target) > 0);
+		}else {
+			return !check_interval(finish, start, target, !start_included, !finish_included);
+		}
 	}
 	
 	/**
