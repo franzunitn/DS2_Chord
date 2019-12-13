@@ -10,4 +10,8 @@ public class Raw {
 		this.index = index;
 		this.successor = successor;
 	}
+	
+	public String toString() {
+		return "[" + this.index.toString() + ", " + this.successor.getSuperNodeNameForMe() + "]";
+	}
 }

@@ -50,4 +50,13 @@ public class FingerTable {
 		Raw r = new Raw(this.fingher.get(idx).index, n);
 		this.fingher.set(idx, r);
 	}
+	
+	public String toString() {
+		String s = "Finghertable: \n";
+		s += "[index, successor]\n";
+		for (Raw raw : this.fingher) {
+			s += raw.toString() + "\n";
+		}
+		return s;
+	}
 }
