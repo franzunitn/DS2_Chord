@@ -423,8 +423,6 @@ public class Node{
 	 * @return true if target is between start and finish
 	 */
 	private boolean check_interval(BigInteger start, BigInteger finish, BigInteger target, boolean start_included, boolean finish_included) {
-		
-		
 		if(start_included && start.compareTo(target) == 0) {
 			return true;
 		}
