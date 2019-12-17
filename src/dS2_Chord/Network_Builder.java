@@ -99,6 +99,7 @@ public class Network_Builder implements ContextBuilder<Object> {
 			//create the new key
 			BigInteger new_key = k.encryptThisString(Integer.toString(i)); 
 			//create a new node
+			System.out.println(new_key.toString());
 			Node n = new Node(new_key);
 			//add the node to the list
 			current_nodes.add(n);

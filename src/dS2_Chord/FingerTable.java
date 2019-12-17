@@ -31,6 +31,7 @@ public class FingerTable {
 			r = new Raw(index, this.originatorNode);
 			this.fingher.add(i, r);
 		}
+		System.out.println(this.fingher.size());
 	}
 	
 	public int getM() {
