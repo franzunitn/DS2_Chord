@@ -4,6 +4,7 @@ import dS2_Chord.Node;
 import dS2_Chord.Key;
 import dS2_Chord.Node_state;
 
+import java.awt.print.Printable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -237,18 +238,25 @@ public class Super_node {
 		 * test di join 10 tick delay one from another 
 		 * all nodes make join
 		 */
+		//this is created because i dont'know why if i pass null throw an error
+		Object a = new Object();
 		if(!this.test) {
 			this.test = true;
 			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
-			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
-			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 30);
+			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
+
+			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 30);
+			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 40);
+			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
+			print("ALL NODES EVENTS SCHEDULED");
+			/*schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 40);
 			schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(1), false, 40);
 			schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(1), false, 50);
 			schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(2), false, 60);
 			schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(2), false, 70);
 			schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(3), false, 80);
-			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(3), false, 90);
+			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(3), false, 90);*/
 		}
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
 		for(Node o: this.all_nodes) {
@@ -262,18 +270,16 @@ public class Super_node {
 		for(Node o : active_nodes) {
 			//check if it is the time to schedule a stabilize
 			if(tick_count % this.stabilize_tick == 0) {
-				//this is created because i dont'know why if i pass null throw an error
-				Object a = new Object();
 				
 				schedule_action(o, "stabilize", a, false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
 			}
 			//check if is the time to schedule a fixfinger
-			if(tick_count % this.fix_finger_tick == 0) {
+			/*if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFinger", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a fixfinger");
 
-			}
+			}*/
 		}
 	}
 	
@@ -309,8 +315,11 @@ public class Super_node {
 			case "fixfinger" : 
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
-				
-			default : break;
+			case "printActualState":
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			default : 
+				System.out.println("COMANDO NON RICONOSCIUTO: " + method);
 		}
 	}
 	
