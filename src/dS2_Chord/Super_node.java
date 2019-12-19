@@ -221,10 +221,10 @@ public class Super_node {
 				schedule_action(o, "stabilize", a, false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
 			}
-			//check if is the time to schedule a fixfinger
+			//check if is the time to schedule a fixFingers
 			if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(o, "fixFinger", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a fixfinger");
+				schedule_action(o, "fixFingers", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
 
 			}
 		}
@@ -235,20 +235,37 @@ public class Super_node {
 	@ScheduledMethod (start = 1, interval = 1)
 	public void simple_test() {
 		/**
-		 * test di join 10 tick delay one from another 
+		 * test of join 10 tick delay one from another 
 		 * all nodes make join
 		 */
+		
 		//this is created because i dont'know why if i pass null throw an error
 		Object a = new Object();
 		if(!this.test) {
 			this.test = true;
 			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
-			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
-
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 30);
-			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 40);
-			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
+			schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 10);
+			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(4), false, 20);
+			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(3), false, 30);
+			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(2), false, 40);
+			
+			
+			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
+			schedule_action(this.all_nodes.get(3), "printActualState", a, false, 100);
+			schedule_action(this.all_nodes.get(4), "printActualState", a, false, 100);
+			
+			//fixFingers
+			for(int i = 105; i<1500;i+=10) {
+				schedule_action(this.all_nodes.get(0), "fixFingers", this.all_nodes.get(2), false, i);
+			}
+			
+			
+			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 1600);
+			
+			
+			
 			print("ALL NODES EVENTS SCHEDULED");
 			/*schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 40);
 			schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(1), false, 40);
@@ -274,10 +291,11 @@ public class Super_node {
 				schedule_action(o, "stabilize", a, false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
 			}
-			//check if is the time to schedule a fixfinger
-			/*if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(o, "fixFinger", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a fixfinger");
+			//check if is the time to schedule a fixFingers
+			/*
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingerss", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
 
 			}*/
 		}
@@ -312,14 +330,15 @@ public class Super_node {
 			case "stabilize" : 
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
-			case "fixfinger" : 
+			case "fixFingers" : 
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				System.out.println(" schedule a fixfinger ");
 				break;
 			case "printActualState":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			default : 
-				System.out.println("COMANDO NON RICONOSCIUTO: " + method);
+				System.out.println("In supernode schedule_action: Method not recognized " + method);
 		}
 	}
 	

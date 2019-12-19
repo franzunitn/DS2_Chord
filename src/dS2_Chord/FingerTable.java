@@ -7,31 +7,31 @@ import java.util.ArrayList;
 
 public class FingerTable {
 	private int m;
-	private ArrayList<Raw> fingher;
+	private ArrayList<Raw> finger;
 	private BigInteger nodeId;
 	private Node originatorNode;
 	
 	public FingerTable(int m, Node originator) {
 		this.m = m;
 		this.nodeId = originator.getId();
-		this.fingher = new ArrayList<Raw>(this.m+1);
+		this.finger = new ArrayList<Raw>(this.m+1);
 		this.originatorNode = originator;
 		init_finghers();
 	}
 	
 	/**
-	 * Init all the entries of the table with the actual node like succesor
+	 * Init all the entries of the table with the actual node like successor
 	 * I don't know if it is a correct way
 	 */
 	private void init_finghers() {
 		Raw r = new Raw(this.nodeId, this.originatorNode);
-		this.fingher.add(0, r);
+		this.finger.add(0, r);
 		for(int i = 1; i <= m; i++) {
-			BigInteger index = this.nodeId.add(Util.two_exponential(i).mod(BigInteger.ZERO.setBit(this.m).subtract(BigInteger.ONE)));
+			BigInteger index = this.nodeId.add(Util.two_exponential(i)).mod(BigInteger.ZERO.setBit(this.m).subtract(BigInteger.ONE));
 			r = new Raw(index, this.originatorNode);
-			this.fingher.add(i, r);
+			this.finger.add(i, r);
 		}
-		System.out.println(this.fingher.size());
+		System.out.println("FingerTable has dimension: " + this.finger.size());
 	}
 	
 	public int getM() {
@@ -39,22 +39,22 @@ public class FingerTable {
 	}
 	
 	public BigInteger getIndex(int idx) {
-		return this.fingher.get(idx).index;
+		return this.finger.get(idx).index;
 	}
 	
 	public Node getNode(int idx) {
-		return this.fingher.get(idx).successor;
+		return this.finger.get(idx).successor;
 	}
 	
 	public void setNewNode(int idx, Node n) {
-		Raw r = new Raw(this.fingher.get(idx).index, n);
-		this.fingher.set(idx, r);
+		Raw r = new Raw(this.finger.get(idx).index, n);
+		this.finger.set(idx, r);
 	}
 	
 	public String toString() {
 		String s = "Finghertable: \n";
-		s += "[index, successor]\n";
-		for (Raw raw : this.fingher) {
+		s += "[index, successor, index bit lenght]\n";
+		for (Raw raw : this.finger) {
 			s += raw.toString() + "\n";
 		}
 		return s;

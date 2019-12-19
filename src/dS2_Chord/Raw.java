@@ -12,6 +12,6 @@ public class Raw {
 	}
 	
 	public String toString() {
-		return "[" + this.index.toString() + ", " + this.successor.getSuperNodeNameForMe() + "]";
+		return "[" + this.index.toString() + ", " + this.successor.getSuperNodeNameForMe() + ", " + this.index.bitLength() + "]";
 	}
 }
