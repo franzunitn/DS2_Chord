@@ -432,7 +432,7 @@ public class Super_node {
 			}
 			
 			//print the fingertable every 100 tick
-			if(tick_count % 100 == 0) {
+			if(tick_count % 10 == 0) {
 				if(o.getId().compareTo(this.all_nodes.get(0).getId()) == 0) {
 					schedule_action(o, "printActualState", a, false, 0);
 				}

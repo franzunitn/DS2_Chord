@@ -490,7 +490,12 @@ public class Node{
 			
 			return this.successor;
 		}else {
-			//print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is NOT in the interval so i return NULL");
+			//print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is NOT in the interval so i search the nearest");
+			//Node n_prime = closest_preceding_node(i);
+			
+			//check if is the nearest neighbor that i know is the successor for this KEY 
+			
+			
 			return null;
 		}
 	}
@@ -501,7 +506,8 @@ public class Node{
 	 * @return the closest node known
 	 */
 	private Node closest_preceding_node(BigInteger id) {
-		for(int i = this.bigIntegerBits; i > 0; i--) {
+		
+		for(int i = this.fingertable.getSize()-1; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
 				return this.fingertable.getNode(i);
 			}
@@ -509,7 +515,9 @@ public class Node{
 		return this;
 	}
 	
-
+	/**
+ 	* function to check if the predecessor ha failed or not.
+ 	*/
 	public void check_predecessor() {
 		if(!(this.state == Node_state.FAILED)) {
 			if(this.predecessor != null) {

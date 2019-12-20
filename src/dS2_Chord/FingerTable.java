@@ -59,4 +59,8 @@ public class FingerTable {
 		}
 		return s;
 	}
+	
+	public int getSize() {
+		return this.finger.size();
+	}
 }
