@@ -60,6 +60,10 @@ public class Super_node {
 	}
 
 	//@ScheduledMethod (start = 1, interval = 1)
+	/**
+	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
+	 * for example fixfinger and stabilize method are schedule inside here.
+	 */
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -233,6 +237,10 @@ public class Super_node {
 	}
 	
 	//@ScheduledMethod (start = 1, interval = 1)
+	/**
+	 * A simple test to run a simple configuration and check that all the nodes are good.
+	 * make the join of 10 nodes and print the state of the node to check predecessor and successor
+	 */
 	public void simple_test() {
 		/**
 		 * test of join 10 tick delay one from another 
@@ -306,7 +314,11 @@ public class Super_node {
 		}
 	}
 	
-	@ScheduledMethod (start = 1, interval = 1)
+	/**
+	 * Another simple test to check if the find successor work good 
+	 * and always returns the correct successor of a key.
+	 */
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_find_successor() {
 		Object a = new Object();
 		if(!this.test) {
@@ -315,11 +327,13 @@ public class Super_node {
 			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
 			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
+			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 20);
 			
 			//schedule print state for check the network 
 			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
 			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
 			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
+			schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
 			
 			//schedule the find successor to check if return the right value
 			//for every node i check the immediate hash next and before every node
@@ -329,6 +343,15 @@ public class Super_node {
 			schedule_action(this.all_nodes.get(1), "find_successor", this.all_nodes.get(1).getId().subtract(BigInteger.ONE), false, 60);
 			schedule_action(this.all_nodes.get(2), "find_successor", this.all_nodes.get(2).getId().add(BigInteger.ONE), false, 60);
 			schedule_action(this.all_nodes.get(2), "find_successor", this.all_nodes.get(2).getId().subtract(BigInteger.ONE), false, 60);
+			schedule_action(this.all_nodes.get(3), "find_successor", this.all_nodes.get(3).getId().add(BigInteger.ONE), false, 60);
+			schedule_action(this.all_nodes.get(3), "find_successor", this.all_nodes.get(3).getId().subtract(BigInteger.ONE), false, 60);
+			
+			//print again to see the finger table 
+			//schedule print state for check the network 
+			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 500);
+			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 500);
+			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 500);
+			schedule_action(this.all_nodes.get(3), "printActualState", a, false, 500);
 			
 			print("\n\n FINISH TEST FIND SUCCESSOR \n\n"); 
 		}
@@ -353,12 +376,68 @@ public class Super_node {
 			//check if is the time to schedule a fixFingers
 			
 			if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(o, "fixFingerss", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
 
+			}
+			
+			//print the fingertable every 100 tick
+			if(tick_count % 100 == 0) {
+				schedule_action(o, "printActualState", a, false, 0);
 			}
 		}
 		
+	}
+	
+	/**
+	 * A Test to fix finger function that every 100 steps print the finger table of node 0 to check if everythink is ok
+	 */
+	@ScheduledMethod (start = 1, interval = 1)
+	public void test_fixfingers() {
+		Object a = new Object();
+		if(!this.test) {
+			this.test = true;
+			for(int i = 0 ; i < this.max_number_of_nodes ; i++) {
+				if(i == 0) {
+					schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 1);
+				}else {
+					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, i * 2);
+				}
+			}
+		}
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			if(o.get_state() == Node_state.ACTIVE) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
+			}
+			
+			//print the fingertable every 100 tick
+			if(tick_count % 100 == 0) {
+				if(o.getId().compareTo(this.all_nodes.get(0).getId()) == 0) {
+					schedule_action(o, "printActualState", a, false, 0);
+				}
+			}
+		}
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
@@ -392,7 +471,6 @@ public class Super_node {
 				break;
 			case "fixFingers" : 
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
-				System.out.println(" schedule a fixfinger ");
 				break;
 			case "printActualState":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
