@@ -72,7 +72,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.VERYVERBOSE;
+		this.log_level = logs_types.MINIMAL;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -344,10 +344,10 @@ public class Node{
 	 */
 	public void fixFingers() {
 		if(!(this.state == Node_state.FAILED)) {
-			
+			 
 			this.next = this.next + 1;
 			print("Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
-					this.next, logs_types.VERBOSE);
+					this.next, logs_types.MINIMAL);
 			
 			if(next > this.bigIntegerBits){
 				this.next = 1; 
@@ -361,7 +361,7 @@ public class Node{
 			if(n!= null) {
 				print("Node: " + snode.get_mapped_id(this.id) + " in fixfinger after find successor, found: " +
 						snode.get_mapped_id(n.getId()) + " as  his successor, at index : " + this.next ,
-					logs_types.VERYVERBOSE);
+					logs_types.MINIMAL);
 				
 				//foud the successor that is me so update the finger table
 				this.fingertable.setNewNode(this.next, n);
@@ -372,7 +372,7 @@ public class Node{
 				
 				print("Node: " + snode.get_mapped_id(this.id) + " has asked to " + 
 						snode.get_mapped_id(this.successor.getId()) + " to find a successor for the fixfinger ",
-								logs_types.VERYVERBOSE);
+								logs_types.MINIMAL);
 						
 				//schedule the receive of a message
 				schedule_message(this.successor, "on_fixfinger_find_successor_message", m, 1);
@@ -398,7 +398,7 @@ public class Node{
 					+ snode.get_mapped_id(m.source.getId()) + " so we send to : " +
 					snode.get_mapped_id(m.source.getId()) + " that the successor is: " +
 					snode.get_mapped_id(n.getId()),
-							logs_types.VERYVERBOSE);
+							logs_types.MINIMAL);
 			
 			//scheduling
 			schedule_message(m.source, "on_fixfinger_find_successor_reply_message", rm, 1);
@@ -408,7 +408,7 @@ public class Node{
 			print("Node: " + snode.get_mapped_id(this.id) + " dind't find the successor for fix finger of  " +
 					snode.get_mapped_id(m.source.getId()) + " so we ask to : " +
 					snode.get_mapped_id(this.successor.getId()) + " to find a successor for the fixfinger ",
-							logs_types.VERYVERBOSE);
+							logs_types.MINIMAL);
 					
 			//schedule the receive of a message
 			schedule_message(this.successor, "on_fixfinger_find_successor_message", m, 1);
@@ -424,7 +424,7 @@ public class Node{
 		print("Node: " + snode.get_mapped_id(this.id) + " receive the successor for the fingertable index : " +
 				m.next + " whith successor: " +
 				snode.get_mapped_id(m.source.getId()),
-						logs_types.VERYVERBOSE);
+						logs_types.MINIMAL);
 		//update the row 
 		this.fingertable.setNewNode(m.next, m.source);
 	}
@@ -436,7 +436,7 @@ public class Node{
 	 * @return the nearest known node to the id
 	 */
 	public Node find_successor(BigInteger i){
-		print("Node: " + snode.get_mapped_id(this.id) + " has to find the successor of: " + i , logs_types.VERYVERBOSE);
+		print(" FIND SUCCESSOR: Node: " + snode.get_mapped_id(this.id) + " has to find the successor of: " + i , logs_types.MINIMAL);
 		/*
 		if (check_interval(this.getId(), this.successor.getId(), i, false, true)) {
 			return this.successor;
@@ -446,13 +446,40 @@ public class Node{
 			return n_prime;
 		}*/
 		
+		
+		//printing information of which test i'm doing
+		
+		/*if(i.compareTo(this.id.add(BigInteger.ONE)) == 0) {
+			print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR the next hash has to be in my successor domain: " + 
+					"\n\t that is: " + snode.get_mapped_id(this.successor.getId()));
+		}else if(i.compareTo(this.id.subtract(BigInteger.ONE)) == 0) {
+			print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESOR the previous hash has to be in my domain: " +
+					"\n\t that is: " + snode.get_mapped_id(this.id));
+		}*/
+		
+		
 		if(this.id.compareTo(this.successor.getId()) == 0) {
+			print("Node: " + snode.get_mapped_id(this.id) +" FIND_SUCCESSOR: case succ = to me ");
 			return this.successor;
 		}
 		
 		if(check_interval(this.getId(), this.successor.getId(), i, false, true)) {
+			
+			print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is between my successor and I so return my successor " +
+					"\n\t that is : " + snode.get_mapped_id(this.successor.getId()));
+			/*
+			print("FIND SUCCESSOR : Node: " + snode.get_mapped_id(this.id) + " has check that: " +
+				 i + " is in the interval :(" + this.getId() + ", " + this.successor.getId() + ")\n" +
+				this.getId().toString(2) + " \n" +
+				 this.successor.getId().toString(2) + " \n" + 
+				i.toString(2) + " \n" +
+					" so return my successor that is: " + snode.get_mapped_id(this.successor.getId())
+				, logs_types.MINIMAL);
+				*/
+			
 			return this.successor;
 		}else {
+			print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is NOT in the interval so i return NULL");
 			return null;
 		}
 	}

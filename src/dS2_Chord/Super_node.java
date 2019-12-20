@@ -232,7 +232,7 @@ public class Super_node {
 		
 	}
 	
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void simple_test() {
 		/**
 		 * test of join 10 tick delay one from another 
@@ -248,6 +248,11 @@ public class Super_node {
 			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(4), false, 20);
 			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(3), false, 30);
 			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(2), false, 40);
+			schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(0), false, 50);
+			schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(0), false, 60);
+			schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(4), false, 70);
+			schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(3), false, 80);
+			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(2), false, 90);
 			
 			
 			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
@@ -257,7 +262,7 @@ public class Super_node {
 			schedule_action(this.all_nodes.get(4), "printActualState", a, false, 100);
 			
 			//fixFingers
-			for(int i = 105; i<1500;i+=10) {
+			for(int i = 100; i<161 * 10;i+=10) {
 				schedule_action(this.all_nodes.get(0), "fixFingers", this.all_nodes.get(2), false, i);
 			}
 			
@@ -301,6 +306,61 @@ public class Super_node {
 		}
 	}
 	
+	@ScheduledMethod (start = 1, interval = 1)
+	public void test_find_successor() {
+		Object a = new Object();
+		if(!this.test) {
+			this.test = true;
+			//schedule the join of three nodes
+			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
+			
+			//schedule print state for check the network 
+			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
+			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
+			
+			//schedule the find successor to check if return the right value
+			//for every node i check the immediate hash next and before every node
+			schedule_action(this.all_nodes.get(0), "find_successor", this.all_nodes.get(0).getId().add(BigInteger.ONE), false, 60);
+			schedule_action(this.all_nodes.get(0), "find_successor", this.all_nodes.get(0).getId().subtract(BigInteger.ONE), false, 60);
+			schedule_action(this.all_nodes.get(1), "find_successor", this.all_nodes.get(1).getId().add(BigInteger.ONE), false, 60);
+			schedule_action(this.all_nodes.get(1), "find_successor", this.all_nodes.get(1).getId().subtract(BigInteger.ONE), false, 60);
+			schedule_action(this.all_nodes.get(2), "find_successor", this.all_nodes.get(2).getId().add(BigInteger.ONE), false, 60);
+			schedule_action(this.all_nodes.get(2), "find_successor", this.all_nodes.get(2).getId().subtract(BigInteger.ONE), false, 60);
+			
+			print("\n\n FINISH TEST FIND SUCCESSOR \n\n"); 
+		}
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			if(o.get_state() == Node_state.ACTIVE) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingerss", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
+			}
+		}
+		
+	}
+	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
 		//schedule receive of a fins successor message in the next tick
 		double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
@@ -336,6 +396,9 @@ public class Super_node {
 				break;
 			case "printActualState":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			case "find_successor":
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters);
 				break;
 			default : 
 				System.out.println("In supernode schedule_action: Method not recognized " + method);
