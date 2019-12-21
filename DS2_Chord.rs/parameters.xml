@@ -19,7 +19,7 @@
 									
 		/>
 				<parameter name="nodes" displayName="#Nodes" type="int" 
-						defaultValue="1000" 
+						defaultValue="10" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									

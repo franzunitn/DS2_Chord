@@ -346,15 +346,19 @@ public class Node{
 		if(!(this.state == Node_state.FAILED)) {
 			 
 			this.next = this.next + 1;
-			print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
-					this.next, logs_types.VERBOSE);
+			if(snode.get_mapped_id(this.id) == 0) {
+				print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
+						this.next, logs_types.MINIMAL);
+			}
 			
-			if(next >= this.bigIntegerBits){
+			
+			if(next == this.bigIntegerBits){
 				this.next = 1; 
 			}
 			
 			//Find the closest node to this id plus two ^ next-1, I applied the module to respect the circle
-			BigInteger index = this.id.add(Util.two_exponential(next-1)).mod(Node.MAX_VALUE);
+			//BigInteger index = this.id.add(Util.two_exponential(next-1)).mod(Node.MAX_VALUE);
+			BigInteger index = this.fingertable.getIndex(next);
 			
 			Node n = find_successor(index);
 			
@@ -447,7 +451,10 @@ public class Node{
 	 * @return the nearest known node to the id
 	 */
 	public Node find_successor(BigInteger i){
-		print(" FIND SUCCESSOR: Node: " + snode.get_mapped_id(this.id) + " has to find the successor of: " + i , logs_types.VERBOSE);
+		if(snode.get_mapped_id(this.id) == 0) {
+			print(" FIND SUCCESSOR: Node: " + snode.get_mapped_id(this.id) + " has to find the successor of: " + i , logs_types.MINIMAL);
+		}
+		
 		/*
 		if (check_interval(this.getId(), this.successor.getId(), i, false, true)) {
 			return this.successor;
@@ -470,14 +477,16 @@ public class Node{
 		
 		
 		if(this.id.compareTo(this.successor.getId()) == 0) {
-			//print("Node: " + snode.get_mapped_id(this.id) +" FIND_SUCCESSOR: case succ = to me ");
+			print("Node: " + snode.get_mapped_id(this.id) +" FIND_SUCCESSOR: case succ = to me ");
 			return this.successor;
 		}
 		
 		if(check_interval(this.getId(), this.successor.getId(), i, false, true)) {
+			if(snode.get_mapped_id(this.id) == 0) {
+				print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is between my successor and I so return my successor " +
+						"\n\t that is : " + snode.get_mapped_id(this.successor.getId()));
+			}
 			
-			//print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is between my successor and I so return my successor " +
-				//	"\n\t that is : " + snode.get_mapped_id(this.successor.getId()));
 			/*
 			print("FIND SUCCESSOR : Node: " + snode.get_mapped_id(this.id) + " has check that: " +
 				 i + " is in the interval :(" + this.getId() + ", " + this.successor.getId() + ")\n" +
@@ -490,13 +499,38 @@ public class Node{
 			
 			return this.successor;
 		}else {
-			//print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is NOT in the interval so i search the nearest");
+			if(snode.get_mapped_id(this.id) == 0) {
+				print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is NOT in the interval so i search the nearest");
+			}
+			
 			//Node n_prime = closest_preceding_node(i);
 			
 			//check if is the nearest neighbor that i know is the successor for this KEY 
 			
 			
-			return null;
+			//return null;
+			
+			Node n_prime = closest_preceding_node(i);
+			
+			//case n_prime = me :
+			if(n_prime.getId().compareTo(this.id) == 0) {
+				if(snode.get_mapped_id(this.id) == 0) {
+					print("Node: " + snode.get_mapped_id(this.id) + " Has found that the closest is me so return my successor: " +
+							snode.get_mapped_id(this.successor.getId()));
+				}
+				
+				return this.successor;
+			}
+			if(snode.get_mapped_id(this.id) == 0) {
+				print("Node: " + snode.get_mapped_id(this.id) + " FOREWARD the request to : " + snode.get_mapped_id(n_prime.getId()));
+			}
+			
+			Node target = n_prime.find_successor(i);
+			if(snode.get_mapped_id(this.id) == 0) {
+				print("\n\t Node: " + snode.get_mapped_id(this.id) + " has found that the successor for that index is: " + snode.get_mapped_id(target.getId()));
+			}
+			
+			return target;
 		}
 	}
 	
@@ -507,8 +541,21 @@ public class Node{
 	 */
 	private Node closest_preceding_node(BigInteger id) {
 		
-		for(int i = this.fingertable.getSize()-1; i > 0; i--) {
+		if(snode.get_mapped_id(this.id) == 0) {
+			print("CLOSEST PRECEDING NODE: Node: " + snode.get_mapped_id(this.id) +
+					" search in his finger table the successor of : " + 
+					id, logs_types.MINIMAL);
+		}
+		
+		//changed to i>1 
+		for(int i = this.fingertable.getSize()-1; i > 1; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
+				if(snode.get_mapped_id(this.id) == 0) {
+					print("\n\t case when the id is in range : (" + snode.get_mapped_id(this.id) + ", " + id + 
+							") so return the node: " + snode.get_mapped_id(this.fingertable.getNode(i).getId()), logs_types.MINIMAL);
+				}
+				
+				
 				return this.fingertable.getNode(i);
 			}
 		}
