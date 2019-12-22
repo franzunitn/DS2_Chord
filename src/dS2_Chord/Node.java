@@ -346,46 +346,35 @@ public class Node{
 		if(!(this.state == Node_state.FAILED)) {
 			 
 			this.next = this.next + 1;
-			if(snode.get_mapped_id(this.id) == 0) {
-				print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
-						this.next, logs_types.MINIMAL);
-			}
-			
 			
 			if(next == this.bigIntegerBits){
 				this.next = 1; 
 			}
 			
-			//Find the closest node to this id plus two ^ next-1, I applied the module to respect the circle
-			//BigInteger index = this.id.add(Util.two_exponential(next-1)).mod(Node.MAX_VALUE);
+			print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
+					this.next, logs_types.VERBOSE);
+			
 			BigInteger index = this.fingertable.getIndex(next);
 			
 			Node n = find_successor(index);
 			
-			if(n!= null) {
-				print("Node: " + snode.get_mapped_id(this.id) + " in fixfinger after find successor, found: " +
-						snode.get_mapped_id(n.getId()) + " as  his successor, at index : " + this.next ,
-					logs_types.VERBOSE);
-				
-				//check if the node successor of that index is really the one that we found
-				print(" \n\t FIXFINGER: Node: " + snode.get_mapped_id(this.id) + " has that the successor of this index is my succesor that is:  " +
-						snode.get_mapped_id(this.successor.getId()) +
-						" \n\t check that that really is by test: i < successor id " +
-						" \n\t " + index.compareTo(this.successor.getId()) + " (if is -1 is ok)", logs_types.VERBOSE);
-				
-				//foud the successor that is me so update the finger table
+			//case that the successor of index is my successor
+			if(n != null) {
+				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + " the successor of indx is my successor", logs_types.VERBOSE);
 				this.fingertable.setNewNode(this.next, n);
+			}else {
 				
-			}else{
-				//i'm not the successor for this index so i froward the message
+				//create and schedule a message to the closest preceding node 
 				Fix_finger_find_successor_message m = new Fix_finger_find_successor_message(this, index, this.next);
 				
-				print("Node: " + snode.get_mapped_id(this.id) + " has asked(send a message) to " + 
-						snode.get_mapped_id(this.successor.getId()) + " to find a successor for the fixfinger ",
-								logs_types.VERBOSE);
-						
-				//schedule the receive of a message
-				schedule_message(this.successor, "on_fixfinger_find_successor_message", m, 1);
+				//get the target node
+				Node target = closest_preceding_node(index);
+				
+				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + 
+						" send a message to the node: " + 
+						snode.get_mapped_id(target.getId()), logs_types.VERBOSE);
+				
+				schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
 			}
 		}
 	}
@@ -398,9 +387,10 @@ public class Node{
 	 * @param m the message received containing the source of the message and the key to be found
 	 */
 	public void on_fixfinger_find_successor_message(Fix_finger_find_successor_message m) {
-		//ask to find successor to find the node corresponding to m.index
+		//see if the id contained in the message is in the range (me, my_successor]
 		Node n = find_successor(m.index);
 		
+		//if i found the successor than create and schedule a reply message
 		if(n != null) {
 			//find the successor send reply message
 			Fix_finger_find_successor_reply_message rm = new Fix_finger_find_successor_reply_message(n, m.next);
@@ -409,23 +399,25 @@ public class Node{
 					m.next + " for the node: "
 					+ snode.get_mapped_id(m.source.getId()) + " so we send to : " +
 					snode.get_mapped_id(m.source.getId()) + " that the successor is: " +
-					snode.get_mapped_id(n.getId()),
-							logs_types.VERBOSE);
+					snode.get_mapped_id(n.getId()), logs_types.VERBOSE);
 			print("FIXFINGER on message find successor before sending we chek if is true :" + 
 					"\n\t by test if index < successor id" + 
 					m.index.compareTo(n.getId()) + " (has to be -1)", logs_types.VERBOSE);
 			//scheduling
 			schedule_message(m.source, "on_fixfinger_find_successor_reply_message", rm, 1);
 			
+		//if not than forward the message	
 		}else {
 			//not found successor
 			print("Node: " + snode.get_mapped_id(this.id) + " dind't find the successor for fix finger of  " +
 					snode.get_mapped_id(m.source.getId()) + " so we ask to : " +
-					snode.get_mapped_id(this.successor.getId()) + " to find a successor for the fixfinger ",
-							logs_types.VERBOSE);
-					
+					snode.get_mapped_id(this.successor.getId()) + " to find a successor for the fixfinger ", logs_types.VERBOSE);
+			
+			//find the closest preceding node and forward him the request
+			Node target = closest_preceding_node(m.index);
+			
 			//schedule the receive of a message
-			schedule_message(this.successor, "on_fixfinger_find_successor_message", m, 1);
+			schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
 		}
 	}
 	
@@ -435,11 +427,11 @@ public class Node{
 	 * @param m 
 	 */
 	public void on_fixfinger_find_successor_reply_message(Fix_finger_find_successor_reply_message m) {
-		//found the succesor and than update the finger table
+		//found the successor and than update the finger table
 		print("Node: " + snode.get_mapped_id(this.id) + " receive the successor for the fingertable index : " +
 				m.next + " whith successor: " +
-				snode.get_mapped_id(m.source.getId()),
-						logs_types.VERBOSE);
+				snode.get_mapped_id(m.source.getId()), logs_types.VERBOSE);
+		
 		//update the row 
 		this.fingertable.setNewNode(m.next, m.source);
 	}
@@ -451,86 +443,47 @@ public class Node{
 	 * @return the nearest known node to the id
 	 */
 	public Node find_successor(BigInteger i){
-		if(snode.get_mapped_id(this.id) == 0) {
-			print(" FIND SUCCESSOR: Node: " + snode.get_mapped_id(this.id) + " has to find the successor of: " + i , logs_types.MINIMAL);
-		}
 		
-		/*
-		if (check_interval(this.getId(), this.successor.getId(), i, false, true)) {
-			return this.successor;
-		} else {
-			Node n_prime = closest_preceding_node(i);
-			//è davvero quello che deve ritornare ? 
-			return n_prime;
-		}*/
+		print(" FIND SUCCESSOR: Node: " + snode.get_mapped_id(this.id) +
+				" has to find the successor of: " + i, logs_types.VERBOSE);
 		
-		
-		//printing information of which test i'm doing
-		
-		/*if(i.compareTo(this.id.add(BigInteger.ONE)) == 0) {
-			print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR the next hash has to be in my successor domain: " + 
-					"\n\t that is: " + snode.get_mapped_id(this.successor.getId()));
-		}else if(i.compareTo(this.id.subtract(BigInteger.ONE)) == 0) {
-			print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESOR the previous hash has to be in my domain: " +
-					"\n\t that is: " + snode.get_mapped_id(this.id));
-		}*/
-		
-		
+		//check if i'm the only one in the net (my suc = me)
 		if(this.id.compareTo(this.successor.getId()) == 0) {
-			print("Node: " + snode.get_mapped_id(this.id) +" FIND_SUCCESSOR: case succ = to me ");
+			print("Node: " + snode.get_mapped_id(this.id) +
+					" FIND_SUCCESSOR: case succ = to me ", logs_types.VERBOSE);
 			return this.successor;
 		}
-		
+		//check if the id that i have to find is in the interval (me, my_successor) 
+		//if it is than my successor is responsible for that id
 		if(check_interval(this.getId(), this.successor.getId(), i, false, true)) {
-			if(snode.get_mapped_id(this.id) == 0) {
-				print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is between my successor and I so return my successor " +
-						"\n\t that is : " + snode.get_mapped_id(this.successor.getId()));
-			}
-			
-			/*
-			print("FIND SUCCESSOR : Node: " + snode.get_mapped_id(this.id) + " has check that: " +
-				 i + " is in the interval :(" + this.getId() + ", " + this.successor.getId() + ")\n" +
-				this.getId().toString(2) + " \n" +
-				 this.successor.getId().toString(2) + " \n" + 
-				i.toString(2) + " \n" +
-					" so return my successor that is: " + snode.get_mapped_id(this.successor.getId())
-				, logs_types.MINIMAL);
-				*/
+			print("Node: " + snode.get_mapped_id(this.id) + 
+					" FIND SUCCESSOR: case the id is between my successor and I so return my successor " +
+					"\n\t that is : " + snode.get_mapped_id(this.successor.getId()), logs_types.VERBOSE);
 			
 			return this.successor;
 		}else {
-			if(snode.get_mapped_id(this.id) == 0) {
-				print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is NOT in the interval so i search the nearest");
-			}
 			
-			//Node n_prime = closest_preceding_node(i);
+			//a message has to be sent to the closest node that precede the id to be found
+			//and that node is in charge to reply if satisfy the two previous condition.
 			
-			//check if is the nearest neighbor that i know is the successor for this KEY 
-			
-			
-			//return null;
+			print("Node: " + snode.get_mapped_id(this.id) + 
+				" FIND SUCCESSOR: case the id is NOT in the interval so i search the nearest", logs_types.VERBOSE);
 			
 			Node n_prime = closest_preceding_node(i);
 			
-			//case n_prime = me :
+			//if i found that i'm the node responsible to this id i return myself
 			if(n_prime.getId().compareTo(this.id) == 0) {
-				if(snode.get_mapped_id(this.id) == 0) {
-					print("Node: " + snode.get_mapped_id(this.id) + " Has found that the closest is me so return my successor: " +
-							snode.get_mapped_id(this.successor.getId()));
-				}
+				print("Node: " + snode.get_mapped_id(this.id) + " Has found that the closest is me. " +
+						snode.get_mapped_id(this.successor.getId()), logs_types.VERBOSE);
 				
-				return this.successor;
-			}
-			if(snode.get_mapped_id(this.id) == 0) {
-				print("Node: " + snode.get_mapped_id(this.id) + " FOREWARD the request to : " + snode.get_mapped_id(n_prime.getId()));
+				return this;
 			}
 			
-			Node target = n_prime.find_successor(i);
-			if(snode.get_mapped_id(this.id) == 0) {
-				print("\n\t Node: " + snode.get_mapped_id(this.id) + " has found that the successor for that index is: " + snode.get_mapped_id(target.getId()));
-			}
+			//if not return null and the Fixfinger will schedule a message to the closest preceding node
+			print("Node: " + snode.get_mapped_id(this.id) + 
+					" a message to che closest has to be sent " + snode.get_mapped_id(n_prime.getId()), logs_types.VERBOSE);
 			
-			return target;
+			return null;
 		}
 	}
 	
@@ -541,20 +494,15 @@ public class Node{
 	 */
 	private Node closest_preceding_node(BigInteger id) {
 		
-		if(snode.get_mapped_id(this.id) == 0) {
-			print("CLOSEST PRECEDING NODE: Node: " + snode.get_mapped_id(this.id) +
-					" search in his finger table the successor of : " + 
-					id, logs_types.MINIMAL);
-		}
+		print("CLOSEST PRECEDING NODE: Node: " + snode.get_mapped_id(this.id) +
+				" search in his finger table the successor of : " + 
+				id, logs_types.VERBOSE);
 		
-		//changed to i>1 
-		for(int i = this.fingertable.getSize()-1; i > 1; i--) {
+		for(int i = this.fingertable.getSize()-1; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
-				if(snode.get_mapped_id(this.id) == 0) {
-					print("\n\t case when the id is in range : (" + snode.get_mapped_id(this.id) + ", " + id + 
-							") so return the node: " + snode.get_mapped_id(this.fingertable.getNode(i).getId()), logs_types.MINIMAL);
-				}
 				
+				print("\n\t case when the id is in range : (" + snode.get_mapped_id(this.id) + ", " + id + 
+						") so return the node: " + snode.get_mapped_id(this.fingertable.getNode(i).getId()), logs_types.VERBOSE);
 				
 				return this.fingertable.getNode(i);
 			}

@@ -53,7 +53,7 @@ public class FingerTable {
 	
 	public String toString() {
 		String s = "Finghertable: \n";
-		s += "[index, successor, index bit lenght]\n";
+		s += "[index, successor]\n";
 		for (Raw raw : this.finger) {
 			s += raw.toString() + "\n";
 		}
