@@ -5,8 +5,8 @@ import dS2_Chord.Node;
 public class Check_predecessor_message {
 	Node source;
 	Node target;
-	Node_state response;
-	public Check_predecessor_message(Node source, Node target, Node_state response) {
+	int response;
+	public Check_predecessor_message(Node source, Node target, int response) {
 		this.source = source;
 		this.target = target;
 		this.response = response;

@@ -5,7 +5,6 @@ import dS2_Chord.Key;
 import dS2_Chord.Raw;
 import dS2_Chord.FingerTable;
 import dS2_Chord.Util;
-import dS2_Chord.Node_state;
 
 import java.awt.Color;
 import java.math.BigInteger;
@@ -40,7 +39,7 @@ public class Node{
 	private FingerTable fingertable;
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
-	private enum logs_types {
+	private static enum logs_types {
 		MINIMAL(0), VERBOSE(1), VERYVERBOSE(2);
 		
 		private final int value;
@@ -51,6 +50,19 @@ public class Node{
 			return this.value;
 		}
 	};
+	
+	public static enum Node_state{
+		ACTIVE(0), INACTIVE(1), FAILED(2);
+		
+		private final int value;
+		private Node_state(int value) {
+			this.value = value;
+		}
+		private int getValue() {
+			return this.value;
+		}
+	};
+	
 	private logs_types log_level;
 	private int next;
 	private boolean predecessor_has_reply;
@@ -113,7 +125,7 @@ public class Node{
 			//check if node n is still in the ring or has fail or leave
 			if(is_first) {
 				
-				print("Node: " + snode.get_mapped_id(this.id) + " has JOIN for FIRST ", logs_types.VERBOSE);
+				//print("Node: " + snode.get_mapped_id(this.id) + " has JOIN for FIRST ", logs_types.MINIMAL);
 				print("\t Node: " + snode.get_mapped_id(this.id) + " sets his predecessor to NULL and successor to himself ", logs_types.VERBOSE);
 				
 				//special case to join
@@ -123,7 +135,7 @@ public class Node{
 				this.state = Node_state.ACTIVE;
 			}else {
 				
-				print("Node: " + snode.get_mapped_id(this.id) + " start JOIN procedure", logs_types.VERBOSE);
+				//print("Node: " + snode.get_mapped_id(this.id) + " start JOIN procedure", logs_types.MINIMAL);
 				
 				this.predecessor = null;
 				//send join message
@@ -181,10 +193,10 @@ public class Node{
 	public void on_receive_join_reply(Node successor) {
 		if(!(this.state == Node_state.FAILED)) {
 			
-			print("Node: " + snode.get_mapped_id(this.id) + " has received a join REPLY from: " + 
+			/*print("Node: " + snode.get_mapped_id(this.id) + " has received a join REPLY from: " + 
 					snode.get_mapped_id(successor.getId()) + " set his successor to: " +
 					snode.get_mapped_id(successor.getId()),
-					logs_types.VERBOSE);
+					logs_types.MINIMAL);*/
 			
 			//set my successor
 			this.successor = successor;
@@ -201,19 +213,17 @@ public class Node{
 	 */
 	public void stabilize() {
 		if(!(this.state == Node_state.FAILED)) {
-			//if(this.id.compareTo(this.successor.getId()) != 0) {
+			//print("Node: " + this.getSuperNodeNameForMe() + " is in stabilize procedure", logs_types.MINIMAL);
+			
+			print("Node: " + snode.get_mapped_id(this.id) + " has enter the stabilize " + " send a message to: " +
+					snode.get_mapped_id(successor.getId()) + " wants to know " + snode.get_mapped_id(successor.getId()) +
+					" predecessor", logs_types.VERBOSE);
 				
-				print("Node: " + snode.get_mapped_id(this.id) + " has enter the stabilize " + " send a message to: " +
-						snode.get_mapped_id(successor.getId()) + " wants to know " + snode.get_mapped_id(successor.getId()) +
-						" predecessor", logs_types.VERBOSE);
+			//find my successor predecessor
+			Find_predecessor_message m = new Find_predecessor_message(this);
 				
-				//find my successor predecessor
-				Find_predecessor_message m = new Find_predecessor_message(this);
-				
-				//schedule the arrival of the message in my successor node
-				schedule_message(this.successor, "on_find_predecessor_receive", m, 1);
-			//}
-			 
+			//schedule the arrival of the message in my successor node
+			schedule_message(this.successor, "on_find_predecessor_receive", m, 1);
 		}
 	}
 	
@@ -347,12 +357,12 @@ public class Node{
 			 
 			this.next = this.next + 1;
 			
-			if(next == this.bigIntegerBits){
+			if(next == Node.bigIntegerBits){
 				this.next = 1; 
 			}
 			
-			print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
-					this.next, logs_types.VERBOSE);
+			/*print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
+					this.next, logs_types.MINIMAL);*/
 			
 			BigInteger index = this.fingertable.getIndex(next);
 			
@@ -493,11 +503,10 @@ public class Node{
 	 * @return the closest node known
 	 */
 	private Node closest_preceding_node(BigInteger id) {
-		
 		print("CLOSEST PRECEDING NODE: Node: " + snode.get_mapped_id(this.id) +
 				" search in his finger table the successor of : " + 
 				id, logs_types.VERBOSE);
-		
+			
 		for(int i = this.fingertable.getSize()-1; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
 				
@@ -514,80 +523,128 @@ public class Node{
  	* function to check if the predecessor ha failed or not.
  	*/
 	public void check_predecessor() {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
+			/*print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
+					" check the predecessor", logs_types.MINIMAL);*/
 			if(this.predecessor != null) {
+				print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
+						" predecessor is: " + this.predecessor.getSuperNodeNameForMe() +
+						" schedule a message to him and wait for response, or timeout", logs_types.VERYVERBOSE);
+				
 				//set the predecessor check variable to inactive
 				this.predecessor_has_reply = false;
 				//than schedule a message to that node if it responds the state will change 
 				//if not that means it is failed
-				Check_predecessor_message m = new Check_predecessor_message(this, this.predecessor, Node_state.INACTIVE);
+				Check_predecessor_message m = new Check_predecessor_message(this, this.predecessor, this.state.getValue());
 				schedule_message(this.predecessor,"on_check_predecessor_receive", m, 1);
 				
 				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
-				schedule_message(this, "timeout_predecessor_failed", m, 4);
+				schedule_message(this, "timeout_predecessor_failed", m, 10);
+			}else {
+				print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
+						" has predecessor NULL", logs_types.VERYVERBOSE);
 			}
 		}
 	}
 	
+	/**
+	 * Handler of a message of type check predecessor.
+	 * if this node is active has to reply with another message
+	 * @param m The message received
+	 */
 	public void on_check_predecessor_receive(Check_predecessor_message m) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
+			/*print("ON_CHECK_PREDECESSOR_RECEIVE: Node: " + this.getSuperNodeNameForMe() +
+					" has received a request from: " +
+					m.source.getSuperNodeNameForMe() +
+					"\n and schedule a reply", logs_types.MINIMAL);*/
+			
 			//construct a message with my current state in the reply
-			Check_predecessor_message reply = new Check_predecessor_message(this, m.source, this.state);
+			Check_predecessor_message reply = new Check_predecessor_message(this, m.source, this.state.getValue());
 			//schedule the reply to the source of the request
 			schedule_message(m.source, "on_check_predecessor_reply", reply, 1);
 		}
 	}
 	
+	/**
+	 * Handler of a check predecessor reply, deactivate the timeout 
+	 * @param m the message received
+	 */
 	public void on_check_predecessor_reply(Check_predecessor_message m) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
+			/*print("ON_CHECK_PREDECESSOR_REPLY: Node: " + this.getSuperNodeNameForMe() +
+					" get a reply form: " + m.source.getSuperNodeNameForMe(), logs_types.MINIMAL);*/
+			
 			//set that the predecessor has replied 
 			this.predecessor_has_reply = true;
-			//the predecessor is not failed but could be inactive
-			if(m.response == Node_state.INACTIVE) {
-				//check if he is still my predecessor
-				if(m.source.getId().compareTo(this.predecessor.getId()) == 0) {
-					//the predecessor leave the network and so i set my predecessor to null
-					//will be fixed by stabilize
-					this.predecessor = null;
-				}
+			//check if he is still my predecessor
+			if(m.source.getId().compareTo(this.predecessor.getId()) == 0) {
+				//the predecessor leave the network and so i set my predecessor to null
+				//will be fixed by stabilize
+				this.predecessor = null;
 			}
 		}
+		
 	}
-	
+	/**
+	 * Timeout for the predecessor if this method is called that means that the predecessor
+	 * has failed so i can safely set my predecessor to NULL
+	 * @param m the message send from myself to 
+	 */
 	public void timeout_predecessor_failed(Check_predecessor_message m) {
-		if(!(this.state == Node_state.FAILED)) {
-			//my predecessor has not reply in 4 tick so i can consider him dead
-			this.predecessor = null;
+		if(this.state == Node_state.ACTIVE) {
+			if(!this.predecessor_has_reply) {
+				//my predecessor has not reply in 10 tick so i can consider him dead
+				this.predecessor = null;
+			}
 			//after that it will be fixed by stabilize
 		}
 	}
 	
+	/**
+	 * Method called when a node wants to leave the network
+	 */
 	public void leave() {
-		if(!(this.state == Node_state.FAILED)) {
+		//check if is already inactive because could occur that two or more leave are schedule
+		if(this.state == Node_state.ACTIVE) {
+			print("LEAVE: Node: " + this.getSuperNodeNameForMe() + " LEAVE the ring", logs_types.VERBOSE);
 			//check if i'm the last one
-			if(this.successor.id.compareTo(this.id) == 0) {
+			if(this.successor.getId().compareTo(this.id) == 0) {
 				this.mykeys.clear();
-			}
-			else {
+				print("LEAVE: Node: " + this.getSuperNodeNameForMe() + 
+						" is the only one in the ring, just clear the key", logs_types.VERYVERBOSE);
+			}else {
+				print("LEAVE: Node: " + this.getSuperNodeNameForMe() + 
+						" schedule a transfer of keys to my successor: " +
+						this.successor.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
+				
 				//transfer the keys with a message of type : transfer_message
 				Transfer_message m = new Transfer_message(this, this.successor, this.mykeys);
-				//schedule the message in THIS tick
+				//schedule the message
 				schedule_message(this.successor, "on_transfer_message", m, 1);
+				//than leave the network
+				this.state = Node_state.INACTIVE;
 			}
 		}
 	}
 	
 	public void on_transfer_message(Transfer_message m){
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
+			print("ON TRANSFER: Node: " + this.getSuperNodeNameForMe() +
+					" receive a TRANSFER message from: " + 
+					m.source.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
 			//acquire the keys
 			this.mykeys.addAll(m.keys);
+		}else {
+			//case where the node is inactive but can forward the message maybe
 		}
-
 	}
 	/**
 	 * Method used to simulate a node failure
 	 */
 	public void fail() {
+		print("FAIL: Node: " + this.getSuperNodeNameForMe() + 
+				" has failed", logs_types.MINIMAL);
 		//lose all the key stored in the node
 		this.mykeys.clear();
 		//simply set the state to FAILED and stop participating in the protocol
@@ -680,8 +737,8 @@ public class Node{
 		return id;
 	}
 
-	public Node_state get_state() {
-		return this.state;
+	public int get_state() {
+		return this.state.getValue();
 	}
 
 	public void setId(BigInteger id) {

@@ -2,7 +2,6 @@ package dS2_Chord;
 
 import dS2_Chord.Node;
 import dS2_Chord.Key;
-import dS2_Chord.Node_state;
 
 import java.awt.print.Printable;
 import java.math.BigInteger;
@@ -79,13 +78,15 @@ public class Super_node {
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
 		
 		for(Node o: this.all_nodes) {
-			if(o.get_state() == Node_state.ACTIVE) {
+			//if o is ACTIVE
+			if(o.get_state() == 0) {
 				active_nodes.add(o);
 			}
 		}
 		
 		for(Node o: this.all_nodes) {
-			if(o.get_state() == Node_state.INACTIVE && !current_nodes.contains(o)) {
+			//if a node is INACTIVE
+			if(o.get_state() == 1 && !current_nodes.contains(o)) {
 				nodes_to_join.add(o);
 			}
 		}
@@ -215,13 +216,10 @@ public class Super_node {
 		 * */
 		//get the current tick
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		
+		Object a = new Object();
 		for(Node o : active_nodes) {
 			//check if it is the time to schedule a stabilize
 			if(tick_count % this.stabilize_tick == 0) {
-				//this is created because i dont'know why if i pass null throw an error
-				Object a = new Object();
-				
 				schedule_action(o, "stabilize", a, false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
 			}
@@ -236,132 +234,114 @@ public class Super_node {
 		
 	}
 	
-	//@ScheduledMethod (start = 1, interval = 1)
 	/**
-	 * A simple test to run a simple configuration and check that all the nodes are good.
-	 * make the join of 10 nodes and print the state of the node to check predecessor and successor
+	 * Simple test to check if the join function work good 
+	 * and always returns the correct successor of a key, 
+	 * and also if with the stabilize and the fix fingers the 
+	 * ring stabilize after a while
 	 */
-	public void simple_test() {
-		/**
-		 * test of join 10 tick delay one from another 
-		 * all nodes make join
-		 */
-		
-		//this is created because i dont'know why if i pass null throw an error
+	//@ScheduledMethod (start = 1, interval = 1)
+	public void testJoin() {
 		Object a = new Object();
+		Random randomGenerator = new Random();
+		
 		if(!this.test) {
 			this.test = true;
-			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-			schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 10);
-			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(4), false, 20);
-			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(3), false, 30);
-			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(2), false, 40);
-			schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(0), false, 50);
-			schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(0), false, 60);
-			schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(4), false, 70);
-			schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(3), false, 80);
-			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(2), false, 90);
 			
-			
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(3), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(4), "printActualState", a, false, 100);
-			
-			//fixFingers
-			for(int i = 100; i<161 * 10;i+=10) {
-				schedule_action(this.all_nodes.get(0), "fixFingers", this.all_nodes.get(2), false, i);
-			}
-			
-			
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 1600);
-			
-			
-			
-			print("ALL NODES EVENTS SCHEDULED");
-			/*schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 40);
-			schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(1), false, 40);
-			schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(1), false, 50);
-			schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(2), false, 60);
-			schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(2), false, 70);
-			schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(3), false, 80);
-			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(3), false, 90);*/
-		}
-		ArrayList<Node> active_nodes = new ArrayList<Node>();
-		for(Node o: this.all_nodes) {
-			if(o.get_state() == Node_state.ACTIVE) {
-				active_nodes.add(o);
-			}
-		}
-		
-		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		
-		for(Node o : active_nodes) {
-			//check if it is the time to schedule a stabilize
-			if(tick_count % this.stabilize_tick == 0) {
+			//simple join test where the nodes join in order (0->1->2-> .. ) and join to the same node (0)
+			if(false) {
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
 				
-				schedule_action(o, "stabilize", a, false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+				//schedule a print state to check the correctness tick 20
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 20);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 20);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 20);
+				//tick 40 
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 40);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 40);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 40);
 			}
-			//check if is the time to schedule a fixFingers
-			/*
-			if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(o, "fixFingerss", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-
-			}*/
-		}
-	}
-	
-	/**
-	 * Another simple test to check if the find successor work good 
-	 * and always returns the correct successor of a key.
-	 */
-	//@ScheduledMethod (start = 1, interval = 1)
-	public void test_find_successor() {
-		Object a = new Object();
-		if(!this.test) {
-			this.test = true;
-			//schedule the join of three nodes
-			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
-			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
-			schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 20);
 			
-			//schedule print state for check the network 
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
-			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
-			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
-			schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
+			//join test where the node join in different order (0->3->2->1->...) but to the same node (0)
+			if(false) {
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 20);
+				
+				//schedule a print state to check the correctness tick 30
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 30);
+				//tick 40 
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 40);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 40);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 40);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 40);
+			}
 			
-			//schedule the find successor to check if return the right value
-			//for every node i check the immediate hash next and before every node
-			schedule_action(this.all_nodes.get(0), "find_successor", this.all_nodes.get(0).getId().add(BigInteger.ONE), false, 60);
-			schedule_action(this.all_nodes.get(0), "find_successor", this.all_nodes.get(0).getId().subtract(BigInteger.ONE), false, 60);
-			schedule_action(this.all_nodes.get(1), "find_successor", this.all_nodes.get(1).getId().add(BigInteger.ONE), false, 60);
-			schedule_action(this.all_nodes.get(1), "find_successor", this.all_nodes.get(1).getId().subtract(BigInteger.ONE), false, 60);
-			schedule_action(this.all_nodes.get(2), "find_successor", this.all_nodes.get(2).getId().add(BigInteger.ONE), false, 60);
-			schedule_action(this.all_nodes.get(2), "find_successor", this.all_nodes.get(2).getId().subtract(BigInteger.ONE), false, 60);
-			schedule_action(this.all_nodes.get(3), "find_successor", this.all_nodes.get(3).getId().add(BigInteger.ONE), false, 60);
-			schedule_action(this.all_nodes.get(3), "find_successor", this.all_nodes.get(3).getId().subtract(BigInteger.ONE), false, 60);
+			//join test where the node join not in order and more than one in the same tick but all to the same node (0)
+			if(false) {
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 10);
+				
+				//schedule a print state to check the correctness tick 30
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 30);
+				//tick 60 
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 60);
+			}
 			
-			//print again to see the finger table 
-			//schedule print state for check the network 
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 500);
-			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 500);
-			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 500);
-			schedule_action(this.all_nodes.get(3), "printActualState", a, false, 500);
+			//join test where the node join not in order and more than one in the same tick and not in order
+			if(false) {
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
+				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 30);
+				schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(1), false, 30);
+				schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(3), false, 30);
+				
+				//schedule a print state to check the correctness tick 30
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(4), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(5), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(6), "printActualState", a, false, 30);
+				//tick 60 
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(4), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(5), "printActualState", a, false, 60);
+				schedule_action(this.all_nodes.get(6), "printActualState", a, false, 60);
+				
+			}
 			
 			print("\n\n FINISH TEST FIND SUCCESSOR \n\n"); 
 		}
 		
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
 		for(Node o: this.all_nodes) {
-			if(o.get_state() == Node_state.ACTIVE) {
+			//if a node is ACTIVE
+			if(o.get_state() == 0) {
 				active_nodes.add(o);
 			}
 		}
+		
 		
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		
@@ -387,10 +367,12 @@ public class Super_node {
 			}
 		}
 		
+		print("CURRENT ACTIVE NODES: " + active_nodes.size());
+		
 	}
 	
 	/**
-	 * A Test to fix finger function that every 100 steps print the finger table of node 0 to check if everythink is ok
+	 * A Test to fix finger function that every 100 steps print the finger table of node 0 to check if everything is OK
 	 */
 	@ScheduledMethod (start = 1, interval = 1)
 	public void test_fixfingers() {
@@ -408,7 +390,8 @@ public class Super_node {
 		
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
 		for(Node o: this.all_nodes) {
-			if(o.get_state() == Node_state.ACTIVE) {
+			//if a node is ACTIVE
+			if(o.get_state() == 0) {
 				active_nodes.add(o);
 			}
 		}
@@ -428,14 +411,70 @@ public class Super_node {
 			if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFingers", "", false, 1);
 				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-
 			}
 			
-			//print the fingertable every 100 tick
+			//print the fingertable every 10 tick
 			if(tick_count % 10 == 0) {
 				if(o.getId().compareTo(this.all_nodes.get(0).getId()) == 0) {
 					schedule_action(o, "printActualState", a, false, 0);
 				}
+			}
+		}
+	}
+	/**
+	 * test if a node that leave the network behave well
+	 */
+	//@ScheduledMethod (start = 1, interval = 1)
+	public void test_leave() {
+		Object a = new Object();
+		if(!this.test) {
+			this.test = true;
+			
+			//check that a node don't do the leave twice
+			if(false) {
+				//schedule the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
+				
+				schedule_action(this.all_nodes.get(2), "leave", a, false, 100);
+				schedule_action(this.all_nodes.get(2), "leave", a, false, 101);
+			}
+			
+			//test if there is only one node in the network and leave
+			if(false) {
+				//schedule the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				
+				schedule_action(this.all_nodes.get(0), "leave", a, false, 25);
+			}
+		}
+		
+		
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
 			}
 		}
 	}

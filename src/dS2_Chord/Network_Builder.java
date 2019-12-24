@@ -95,6 +95,7 @@ public class Network_Builder implements ContextBuilder<Object> {
 		//Dictionary to map hash id into a more visualize integer id
 		Dictionary<BigInteger, Integer> d = new Hashtable();
 		
+		
 		for (int i = 0; i < nodes; i++) {
 			//create the new key
 			BigInteger new_key = k.encryptThisString(Integer.toString(i)); 
@@ -104,6 +105,18 @@ public class Network_Builder implements ContextBuilder<Object> {
 			//add the node to the list
 			current_nodes.add(n);
 		}
+		/*
+		//MANUALLY create some node to test fixfinger
+		for (int i = 0; i < nodes; i++) {
+			BigInteger next = new BigInteger("" + i);
+			//create the new key
+			BigInteger new_key = next.multiply(BigInteger.TEN);
+			//create a new node
+			System.out.println(new_key.toString());
+			Node n = new Node(new_key);
+			//add the node to the list
+			current_nodes.add(n);
+		}*/
 		
 		//sort the node by key to construct the ring topology
 		Collections.sort(current_nodes, new Comparator<Node>() {
