@@ -84,7 +84,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.MINIMAL;
+		this.log_level = logs_types.VERYVERBOSE;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -158,7 +158,7 @@ public class Node{
 	 * @param m the message that arrive
 	 */
 	public void on_find_successor_receive(Find_successor_message m) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
 			print("Node: " + snode.get_mapped_id(this.id) + " has received a request of join from: " + 
 					snode.get_mapped_id(m.source.getId()),
 					logs_types.VERBOSE);
@@ -191,18 +191,18 @@ public class Node{
 	 * @param successor the node i have to set as successor
 	 */
 	public void on_receive_join_reply(Node successor) {
-		if(!(this.state == Node_state.FAILED)) {
+		
 			
-			/*print("Node: " + snode.get_mapped_id(this.id) + " has received a join REPLY from: " + 
+			print("Node: " + snode.get_mapped_id(this.id) + " has received a join REPLY from: " + 
 					snode.get_mapped_id(successor.getId()) + " set his successor to: " +
 					snode.get_mapped_id(successor.getId()),
-					logs_types.MINIMAL);*/
+					logs_types.VERBOSE);
 			
 			//set my successor
 			this.successor = successor;
 			//set my state to active
 			this.state = Node_state.ACTIVE;
-		}
+		
 	}
 	
 	
@@ -212,7 +212,7 @@ public class Node{
 	 * to the predecessor and that notify the node that i become his predecessor.
 	 */
 	public void stabilize() {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
 			//print("Node: " + this.getSuperNodeNameForMe() + " is in stabilize procedure", logs_types.MINIMAL);
 			
 			print("Node: " + snode.get_mapped_id(this.id) + " has enter the stabilize " + " send a message to: " +
@@ -233,7 +233,7 @@ public class Node{
 	 * @param m the message that I receive
 	 */
 	public void on_find_predecessor_receive(Find_predecessor_message m) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
 			//reply with my predecessor (if not null)
 			Find_predecessor_reply rply;
 			if(this.predecessor != null) {
@@ -267,7 +267,7 @@ public class Node{
 	 * @param x
 	 */
 	public void on_find_predecessor_reply(Find_predecessor_reply x) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
 			//if the predecessor of my successor is between me and my successor 
 			//i set my successor to him and than notify him.
 			if(!x.is_null) {
@@ -320,7 +320,7 @@ public class Node{
 	* @param n The node that discover that i'm his successor
 	*/
 	public void notification(Node n) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
 			if(this.predecessor == null || check_interval(this.predecessor.getId(), this.id, n.getId(), false ,false)) {
 				//set my predecessor
 				this.predecessor = n;
@@ -353,7 +353,7 @@ public class Node{
 	 * Periodic function used to update the finger table
 	 */
 	public void fixFingers() {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state == Node_state.ACTIVE) {
 			 
 			this.next = this.next + 1;
 			
@@ -361,8 +361,8 @@ public class Node{
 				this.next = 1; 
 			}
 			
-			/*print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
-					this.next, logs_types.MINIMAL);*/
+			print("FIXFINGERS : Node: " + snode.get_mapped_id(this.id) + " start a fixFinger with next :  " +
+					this.next, logs_types.VERBOSE);
 			
 			BigInteger index = this.fingertable.getIndex(next);
 			
@@ -524,8 +524,8 @@ public class Node{
  	*/
 	public void check_predecessor() {
 		if(this.state == Node_state.ACTIVE) {
-			/*print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
-					" check the predecessor", logs_types.MINIMAL);*/
+			print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
+					" check the predecessor", logs_types.VERBOSE);
 			if(this.predecessor != null) {
 				print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
 						" predecessor is: " + this.predecessor.getSuperNodeNameForMe() +
@@ -539,7 +539,7 @@ public class Node{
 				schedule_message(this.predecessor,"on_check_predecessor_receive", m, 1);
 				
 				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
-				schedule_message(this, "timeout_predecessor_failed", m, 10);
+				schedule_message(this, "timeout_predecessor_failed", m, 5);
 			}else {
 				print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
 						" has predecessor NULL", logs_types.VERYVERBOSE);
@@ -554,10 +554,10 @@ public class Node{
 	 */
 	public void on_check_predecessor_receive(Check_predecessor_message m) {
 		if(this.state == Node_state.ACTIVE) {
-			/*print("ON_CHECK_PREDECESSOR_RECEIVE: Node: " + this.getSuperNodeNameForMe() +
+			print("ON_CHECK_PREDECESSOR_RECEIVE: Node: " + this.getSuperNodeNameForMe() +
 					" has received a request from: " +
 					m.source.getSuperNodeNameForMe() +
-					"\n and schedule a reply", logs_types.MINIMAL);*/
+					"\n and schedule a reply", logs_types.VERBOSE);
 			
 			//construct a message with my current state in the reply
 			Check_predecessor_message reply = new Check_predecessor_message(this, m.source, this.state.getValue());
@@ -572,20 +572,15 @@ public class Node{
 	 */
 	public void on_check_predecessor_reply(Check_predecessor_message m) {
 		if(this.state == Node_state.ACTIVE) {
-			/*print("ON_CHECK_PREDECESSOR_REPLY: Node: " + this.getSuperNodeNameForMe() +
-					" get a reply form: " + m.source.getSuperNodeNameForMe(), logs_types.MINIMAL);*/
+			
+			print("ON_CHECK_PREDECESSOR_REPLY: Node: " + this.getSuperNodeNameForMe() +
+					" get a reply form: " + m.source.getSuperNodeNameForMe(), logs_types.VERBOSE);
 			
 			//set that the predecessor has replied 
 			this.predecessor_has_reply = true;
-			//check if he is still my predecessor
-			if(m.source.getId().compareTo(this.predecessor.getId()) == 0) {
-				//the predecessor leave the network and so i set my predecessor to null
-				//will be fixed by stabilize
-				this.predecessor = null;
-			}
 		}
-		
 	}
+	
 	/**
 	 * Timeout for the predecessor if this method is called that means that the predecessor
 	 * has failed so i can safely set my predecessor to NULL
@@ -613,6 +608,8 @@ public class Node{
 				this.mykeys.clear();
 				print("LEAVE: Node: " + this.getSuperNodeNameForMe() + 
 						" is the only one in the ring, just clear the key", logs_types.VERYVERBOSE);
+				this.state = Node_state.INACTIVE;
+				
 			}else {
 				print("LEAVE: Node: " + this.getSuperNodeNameForMe() + 
 						" schedule a transfer of keys to my successor: " +

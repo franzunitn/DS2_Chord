@@ -240,28 +240,30 @@ public class Super_node {
 	 * and also if with the stabilize and the fix fingers the 
 	 * ring stabilize after a while
 	 */
-	//@ScheduledMethod (start = 1, interval = 1)
+	@ScheduledMethod (start = 1, interval = 1)
 	public void testJoin() {
 		Object a = new Object();
-		Random randomGenerator = new Random();
 		
 		if(!this.test) {
 			this.test = true;
 			
 			//simple join test where the nodes join in order (0->1->2-> .. ) and join to the same node (0)
-			if(false) {
+			if(true) {
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
 				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 20);
 				
 				//schedule a print state to check the correctness tick 20
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 20);
-				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 20);
-				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 20);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 30);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 30);
 				//tick 40 
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 40);
-				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 40);
-				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 40);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
 			}
 			
 			//join test where the node join in different order (0->3->2->1->...) but to the same node (0)
@@ -371,56 +373,7 @@ public class Super_node {
 		
 	}
 	
-	/**
-	 * A Test to fix finger function that every 100 steps print the finger table of node 0 to check if everything is OK
-	 */
-	@ScheduledMethod (start = 1, interval = 1)
-	public void test_fixfingers() {
-		Object a = new Object();
-		if(!this.test) {
-			this.test = true;
-			for(int i = 0 ; i < this.max_number_of_nodes ; i++) {
-				if(i == 0) {
-					schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 1);
-				}else {
-					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, i * 2);
-				}
-			}
-		}
-		
-		ArrayList<Node> active_nodes = new ArrayList<Node>();
-		for(Node o: this.all_nodes) {
-			//if a node is ACTIVE
-			if(o.get_state() == 0) {
-				active_nodes.add(o);
-			}
-		}
-		
-		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		
-		for(Node o : active_nodes) {
-			//check if it is the time to schedule a stabilize
-			if(tick_count % this.stabilize_tick == 0) {
-				
-				schedule_action(o, "stabilize", a, false, 1);
-				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
-			}
-			
-			//check if is the time to schedule a fixFingers
-			
-			if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(o, "fixFingers", "", false, 1);
-				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-			}
-			
-			//print the fingertable every 10 tick
-			if(tick_count % 10 == 0) {
-				if(o.getId().compareTo(this.all_nodes.get(0).getId()) == 0) {
-					schedule_action(o, "printActualState", a, false, 0);
-				}
-			}
-		}
-	}
+	
 	/**
 	 * test if a node that leave the network behave well
 	 */
@@ -430,23 +383,55 @@ public class Super_node {
 		if(!this.test) {
 			this.test = true;
 			
-			//check that a node don't do the leave twice
-			if(false) {
-				//schedule the join
-				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
-				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
-				
-				schedule_action(this.all_nodes.get(2), "leave", a, false, 100);
-				schedule_action(this.all_nodes.get(2), "leave", a, false, 101);
-			}
-			
 			//test if there is only one node in the network and leave
 			if(false) {
-				//schedule the join
+				//schedule all the join
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 				
-				schedule_action(this.all_nodes.get(0), "leave", a, false, 25);
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 10);
+			}
+			
+			//test if some nodes leave in order
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 35);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 60);
+				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 70);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 80);
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 90);
+			}
+			
+			//test if some node leave at the same tick
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), true, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), true, 25);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), true, 35);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+				
+				//schedule leave
+				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 60);
+				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 60);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 60);
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 60);
 			}
 		}
 		
@@ -476,7 +461,16 @@ public class Super_node {
 				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
 
 			}
+			
+			//check predecessor procedure
+			if(tick_count % this.stabilize_tick == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+
+			}
 		}
+		
+		print("CURRENT ACTIVE NODES: " + active_nodes.size());
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
@@ -516,6 +510,9 @@ public class Super_node {
 				break;
 			case "find_successor":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters);
+				break;
+			case "check_predecessor":
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			default : 
 				System.out.println("In supernode schedule_action: Method not recognized " + method);
