@@ -20,9 +20,8 @@ public class Key {
 	       // to calculate message digest of the input string 
 	       // returned as array of byte 
 	       byte[] messageDigest = md.digest(input.getBytes()); 
-	  
 	       // Convert byte array into signum representation 
-	       BigInteger no = new BigInteger(messageDigest); 
+	       BigInteger no = new BigInteger(messageDigest);
 	       // Convert message digest into hex value 
 	       //String hashtext = no.toString(16); 
 	       

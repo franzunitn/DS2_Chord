@@ -79,6 +79,18 @@ public class Node{
 		return Integer.toString(snode.get_mapped_id(this.id));
 	}
 	
+	public void printActualStateMinimal() {
+		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.MINIMAL);
+	}
+	
+	private void changeActualLogLevel(logs_types logLevel) {
+		this.log_level = logLevel;
+	}
+	
+	public void logLevelToVeryVerbose() {
+		changeActualLogLevel(logs_types.VERYVERBOSE);
+	}
+	
 	/**
 	 * Method used to print the node state
 	 */
@@ -169,7 +181,7 @@ public class Node{
 					snode.get_mapped_id(this.successor.getId()), logs_types.VERYVERBOSE);
 			
 			//forward message to closest preceding node by schedule a message Find_successor_message
-			schedule_message(this.successor, "on_find_successor_receive", m, 1);
+			schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
 		}
 	}
 	
@@ -350,6 +362,7 @@ public class Node{
 					this.next, logs_types.VERBOSE);
 			
 			if(next >= this.bigIntegerBits){
+				print("Next: " + next, logs_types.VERYVERBOSE);
 				this.next = 1; 
 			}
 			
@@ -381,7 +394,7 @@ public class Node{
 								logs_types.VERBOSE);
 						
 				//schedule the receive of a message
-				schedule_message(this.successor, "on_fixfinger_find_successor_message", m, 1);
+				schedule_message(closest_preceding_node(index), "on_fixfinger_find_successor_message", m, 1);
 			}
 		}
 	}
@@ -421,7 +434,7 @@ public class Node{
 							logs_types.VERBOSE);
 					
 			//schedule the receive of a message
-			schedule_message(this.successor, "on_fixfinger_find_successor_message", m, 1);
+			schedule_message(closest_preceding_node(m.index), "on_fixfinger_find_successor_message", m, 1);
 		}
 	}
 	
@@ -453,7 +466,7 @@ public class Node{
 			return this.successor;
 		} else {
 			Node n_prime = closest_preceding_node(i);
-			//è davvero quello che deve ritornare ? 
+			//ï¿½ davvero quello che deve ritornare ? 
 			return n_prime;
 		}*/
 		
@@ -468,12 +481,10 @@ public class Node{
 					"\n\t that is: " + snode.get_mapped_id(this.id));
 		}*/
 		
-		
 		if(this.id.compareTo(this.successor.getId()) == 0) {
 			//print("Node: " + snode.get_mapped_id(this.id) +" FIND_SUCCESSOR: case succ = to me ");
 			return this.successor;
 		}
-		
 		if(check_interval(this.getId(), this.successor.getId(), i, false, true)) {
 			
 			//print("Node: " + snode.get_mapped_id(this.id) +" FIND SUCCESSOR: case the id is between my successor and I so return my successor " +
@@ -602,8 +613,11 @@ public class Node{
 	//lookup send a message to the right node 
 	public void lookup(BigInteger key) {
 		Node target = find_successor(key);
-		schedule_message(target, "check_element", key, 1);
-		
+		if(target != null)
+			schedule_message(target, "check_element", key, 1);
+		else {
+			//TODO ask the successor to the closest_preceding_node
+		}
 	}
 	//check if the key is present in the node 
 	public BigInteger check_element(BigInteger key) {
@@ -618,12 +632,17 @@ public class Node{
 	//find the node reliable of the key 
 	public void insert(BigInteger new_key) {
 		Node target = find_successor(new_key);
-		//create an arraylist containing only the new key
-		ArrayList<BigInteger> k = new ArrayList<BigInteger>();
-		k.add(new_key);
-		//new Transfer message with only a key
-		Transfer_message m = new Transfer_message(this, target, k);
-		schedule_message(target, "on_transfer_message", m, 1);
+		if (target != null) {
+			//create an arraylist containing only the new key
+			ArrayList<BigInteger> k = new ArrayList<BigInteger>();
+			k.add(new_key);
+			//new Transfer message with only a key
+			Transfer_message m = new Transfer_message(this, target, k);
+			schedule_message(target, "on_transfer_message", m, 1);
+		}
+		else {
+			//TODO ask the successor with the closest_preceding_node
+		}
 	}
 	
 	

@@ -263,11 +263,11 @@ public class Super_node {
 			schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(2), false, 90);
 			
 			
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(3), "printActualState", a, false, 100);
-			schedule_action(this.all_nodes.get(4), "printActualState", a, false, 100);
+			//schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+			//schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+			//schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
+			//schedule_action(this.all_nodes.get(3), "printActualState", a, false, 100);
+			//schedule_action(this.all_nodes.get(4), "printActualState", a, false, 100);
 			
 			//fixFingers
 			for(int i = 100; i<161 * 10;i+=10) {
@@ -275,7 +275,7 @@ public class Super_node {
 			}
 			
 			
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 1600);
+			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 2000);
 			
 			
 			
@@ -378,7 +378,6 @@ public class Super_node {
 			if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFingers", "", false, 1);
 				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-
 			}
 			
 			//print the fingertable every 100 tick
@@ -404,6 +403,7 @@ public class Super_node {
 					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, i * 2);
 				}
 			}
+			schedule_action(this.all_nodes.get(1500), "printActualState", a, false, 15000);
 		}
 		
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
@@ -432,11 +432,11 @@ public class Super_node {
 			}
 			
 			//print the fingertable every 100 tick
-			if(tick_count % 10 == 0) {
+			/*if(tick_count % 10 == 0) {
 				if(o.getId().compareTo(this.all_nodes.get(0).getId()) == 0) {
 					schedule_action(o, "printActualState", a, false, 0);
 				}
-			}
+			}*/
 		}
 	}
 	
@@ -473,6 +473,9 @@ public class Super_node {
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			case "printActualState":
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			case "printActualStateMinimal":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			case "find_successor":
