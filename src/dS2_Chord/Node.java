@@ -5,7 +5,6 @@ import dS2_Chord.Key;
 import dS2_Chord.Raw;
 import dS2_Chord.FingerTable;
 import dS2_Chord.Util;
-import dS2_Chord.Node_state;
 
 import java.awt.Color;
 import java.math.BigInteger;
@@ -77,6 +76,18 @@ public class Node{
 	
 	public String getSuperNodeNameForMe() {
 		return Integer.toString(snode.get_mapped_id(this.id));
+	}
+	
+	public void printActualStateMinimal() {
+		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.MINIMAL);
+	}
+	
+	private void changeActualLogLevel(logs_types logLevel) {
+		this.log_level = logLevel;
+	}
+	
+	public void logLevelToVeryVerbose() {
+		changeActualLogLevel(logs_types.VERYVERBOSE);
 	}
 	
 	/**
@@ -169,7 +180,7 @@ public class Node{
 					snode.get_mapped_id(this.successor.getId()), logs_types.VERYVERBOSE);
 			
 			//forward message to closest preceding node by schedule a message Find_successor_message
-			schedule_message(this.successor, "on_find_successor_receive", m, 1);
+			schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
 		}
 	}
 	
@@ -375,6 +386,7 @@ public class Node{
 						snode.get_mapped_id(target.getId()), logs_types.VERBOSE);
 				
 				schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
+
 			}
 		}
 	}
@@ -417,6 +429,7 @@ public class Node{
 			Node target = closest_preceding_node(m.index);
 			
 			//schedule the receive of a message
+
 			schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
 		}
 	}
@@ -597,8 +610,11 @@ public class Node{
 	//lookup send a message to the right node 
 	public void lookup(BigInteger key) {
 		Node target = find_successor(key);
-		schedule_message(target, "check_element", key, 1);
-		
+		if(target != null)
+			schedule_message(target, "check_element", key, 1);
+		else {
+			//TODO ask the successor to the closest_preceding_node
+		}
 	}
 	//check if the key is present in the node 
 	public BigInteger check_element(BigInteger key) {
@@ -613,12 +629,17 @@ public class Node{
 	//find the node reliable of the key 
 	public void insert(BigInteger new_key) {
 		Node target = find_successor(new_key);
-		//create an arraylist containing only the new key
-		ArrayList<BigInteger> k = new ArrayList<BigInteger>();
-		k.add(new_key);
-		//new Transfer message with only a key
-		Transfer_message m = new Transfer_message(this, target, k);
-		schedule_message(target, "on_transfer_message", m, 1);
+		if (target != null) {
+			//create an arraylist containing only the new key
+			ArrayList<BigInteger> k = new ArrayList<BigInteger>();
+			k.add(new_key);
+			//new Transfer message with only a key
+			Transfer_message m = new Transfer_message(this, target, k);
+			schedule_message(target, "on_transfer_message", m, 1);
+		}
+		else {
+			//TODO ask the successor with the closest_preceding_node
+		}
 	}
 	
 	
