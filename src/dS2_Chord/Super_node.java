@@ -360,7 +360,6 @@ public class Super_node {
 			if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFingers", "", false, 1);
 				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-
 			}
 			
 			//print the fingertable every 100 tick
@@ -433,6 +432,7 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 60);
 				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 60);
 			}
+			schedule_action(this.all_nodes.get(1500), "printActualState", a, false, 15000);
 		}
 		
 		
@@ -506,6 +506,9 @@ public class Super_node {
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			case "printActualState":
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			case "printActualStateMinimal":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			case "find_successor":

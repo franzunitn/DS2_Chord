@@ -31,7 +31,7 @@ public class FingerTable {
 			r = new Raw(index, this.originatorNode);
 			this.finger.add(i, r);
 		}
-		System.out.println("FingerTable has dimension: " + this.finger.size());
+		//System.out.println("FingerTable has dimension: " + this.finger.size());
 	}
 	
 	public int getM() {
