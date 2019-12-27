@@ -365,7 +365,8 @@ public class Node{
 	 * Periodic function used to update the finger table
 	 */
 	public void fixFingers() {
-		if(this.state == Node_state.ACTIVE) {
+		if(this.state == Node_state.ACTIVE && 
+				this.getId().compareTo(this.successor.getId()) != 0) {
 			 
 			this.next = this.next + 1;
 			
@@ -521,10 +522,10 @@ public class Node{
 				" search in his finger table the successor of : " + 
 				id, logs_types.VERBOSE);
 			
-		for(int i = this.fingertable.getSize()-1; i > 0; i--) {
+		for(int i = this.fingertable.getDimension()-1; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
 				
-				print("\n\t case when the id is in range : (" + snode.get_mapped_id(this.id) + ", " + id + 
+				print("\n\t case when the index " + this.fingertable.getIndex(i) + " is in range : (" + snode.get_mapped_id(this.id) + ", " + id + 
 						") so return the node: " + snode.get_mapped_id(this.fingertable.getNode(i).getId()), logs_types.VERBOSE);
 				
 				return this.fingertable.getNode(i);
@@ -553,7 +554,7 @@ public class Node{
 				schedule_message(this.predecessor,"on_check_predecessor_receive", m, 1);
 				
 				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
-				schedule_message(this, "timeout_predecessor_failed", m, 5);
+				schedule_message(this, "timeout_predecessor_failed", m, 10);
 			}else {
 				print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
 						" has predecessor NULL", logs_types.VERYVERBOSE);
