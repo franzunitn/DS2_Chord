@@ -662,16 +662,132 @@ public class Node{
 		//simply set the state to FAILED and stop participating in the protocol
 		this.state = Node_state.FAILED;
 	}
-	
-	//lookup send a message to the right node 
+
+	/**
+	 * Function for a key lookup, it will print the result on standard output
+	 * @param key requested for the lookup
+	 */
 	public void lookup(BigInteger key) {
-		Node target = find_successor(key);
-		if(target != null)
-			schedule_message(target, "check_element", key, 1);
+		//Check if the node is active
+		if(this.state == Node_state.ACTIVE) {
+			// Check if the key is in my competence range
+			if (this.predecessor != null && check_interval(this.predecessor.getId(), this.getId(), key, false, false)) {
+				// Check if I know the key
+				if (check_element(key) != null) {
+					//Print a message for the object if it's found
+					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + ", Object [" + key + "] FOUND", logs_types.MINIMAL);
+					return;
+				}
+				else {
+					//Print the message for the object if it's not found
+					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + ", Object [" + key + "] NOT FOUND", logs_types.MINIMAL);
+					return;
+				}
+			}
+			
+			//The target is not in my range, check if I can use the successor
+			Node target = find_successor(key);
+			//Prepare the message
+			look_up_message lum = new look_up_message(this, key);
+			if(target != null) {
+				//If the successor is available use it and send the message to it
+				print("LOOKUP, Node: " + this.getSuperNodeNameForMe()
+						+ ", I send a look up message to node " + target.getSuperNodeNameForMe()
+						+ " to look for the key requested", logs_types.VERBOSE);
+				schedule_message(target, "on_look_up_message_receive", lum, 1);
+			}
+			//My successor is not the right node that will handle the key
+			else {
+				//Search for the correct node in the closest preceding nodes
+				Node closest = closest_preceding_node(key);
+				//If I'm choosen like closest preceding node there is a problem
+				if(this.getId().equals(closest.getId())) {
+					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but I don't have the object, so:"
+							+ "\n\tObject [" + key + "] NOT FOUND, this is clearly a strange situation :muble:", logs_types.MINIMAL);
+					return;
+				}
+				print("LOOKUP, Node: " + this.getSuperNodeNameForMe()
+					+ ", I send a look up message to node " + closest.getSuperNodeNameForMe()
+					+ " to handle the key requested", logs_types.VERBOSE);
+				//Send the message
+				schedule_message(closest, "on_look_up_message_receive", lum, 1);
+			}
+		}
 		else {
-			//TODO ask the successor to the closest_preceding_node
+			//Message for the user
+			print("Node: " + this.getSuperNodeNameForMe() + ", I'm not active, I cannot lookup", log_level.VERBOSE);
 		}
 	}
+	
+	/**
+	 * Function that handle a lookup message
+	 * @param m message containing the key for which we are looking for
+	 */
+	public void on_look_up_message_receive(look_up_message m) {
+		if(this.state == Node_state.ACTIVE) {
+			//Check if the key is in my interval
+			if (this.predecessor != null && check_interval(this.predecessor.getId(), this.getId(), m.key, false, false)) {
+				print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
+						+ " the key we are looking for is in my interval", logs_types.VERYVERBOSE);
+				if (check_element(m.key) != null) {
+					print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
+						+ " I have the key we are looking for, I send a message to the source ("
+						+ m.source.getSuperNodeNameForMe() + ") to comuncate the positeve handling", logs_types.VERBOSE);
+					look_up_reply_message lurm = new look_up_reply_message(this, true);
+					schedule_message(m.source, "on_look_up_reply_message_receive", lurm, 1);
+					return;
+				} else {
+					print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
+						+ " I don't have the key we are looking for, I send a message to the source ("
+						+ m.source.getSuperNodeNameForMe() + ") to comuncate the negative handling", logs_types.VERBOSE);
+					look_up_reply_message lurm = new look_up_reply_message(this, false);
+					schedule_message(m.source, "on_look_up_reply_message_receive", lurm, 1);
+					return;
+				}
+			}
+			print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
+				+ " the key we are looking for is not in my interval", logs_types.VERYVERBOSE);
+			Node target = find_successor(m.key);
+			if(target != null) {
+				//If the successor is available use it and send the message to it
+				print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
+					+ ", I send a look up message to node " + target.getSuperNodeNameForMe()
+					+ " to look for the key requested", logs_types.VERBOSE);
+				schedule_message(target, "on_look_up_message_receive", m, 1);
+			}
+			else {
+				Node closest = closest_preceding_node(m.key);
+				if(this.getId().equals(closest.getId())) {
+					print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but I don't have the object, so:"
+							+ "\n\tObject [" + m.key + "] NOT FOUND, this is clearly a strange situation :muble:", logs_types.MINIMAL);
+					look_up_reply_message lurm = new look_up_reply_message(this, false);
+					schedule_message(m.source, "on_look_up_reply_message_receive", lurm, 1);
+					return;
+				}
+				print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
+					+ ", I send a look up message to node " + closest.getSuperNodeNameForMe()
+					+ " to handle the key requested", logs_types.VERBOSE);
+				schedule_message(closest, "on_look_up_message_receive", m, 1);
+			}
+		}
+	}
+	
+	/**
+	 * Function to handle the reply to a lookup message
+	 * @param m reply message, it can contains positive or negative informations
+	 */
+	public void on_look_up_reply_message_receive(look_up_reply_message m) {
+		if(this.state == Node_state.ACTIVE) {
+			if (m.is_present) {
+				print("ON_LOOKUP_RPLY_MSG, Node: " + this.getSuperNodeNameForMe() + ", receive a look_up_reply by: "
+						+ m.source.getSuperNodeNameForMe() + " and it FOUND the recource I was looking for :)", logs_types.MINIMAL);
+			} else {
+				print("ON_LOOKUP_RPLY_MSG, Node: " + this.getSuperNodeNameForMe() + ", receive a look_up_reply by: "
+						+ m.source.getSuperNodeNameForMe() + " and it DID NOT FOUND the recource I was looking for :(", logs_types.MINIMAL);
+			}
+		}
+	}
+	
 	//check if the key is present in the node 
 	public BigInteger check_element(BigInteger key) {
 		if (this.mykeys.contains(key)) {
@@ -682,19 +798,93 @@ public class Node{
 		}
 	}
 	
-	//find the node reliable of the key 
+	/**
+	 * Function to insert a new key-object in the ring
+	 * @param new_key key to store
+	 */
 	public void insert(BigInteger new_key) {
-		Node target = find_successor(new_key);
-		if (target != null) {
-			//create an arraylist containing only the new key
-			ArrayList<BigInteger> k = new ArrayList<BigInteger>();
-			k.add(new_key);
-			//new Transfer message with only a key
-			Transfer_message m = new Transfer_message(this, target, k);
-			schedule_message(target, "on_transfer_message", m, 1);
+		if(this.state == Node_state.ACTIVE) {
+			// Check if the key belongs to this interval
+			if (this.predecessor != null && check_interval(this.predecessor.getId(), this.getId(), new_key, false, false)) {
+				// Check if the key is already in the node keys list
+				if (check_element(new_key) == null) {
+					print("INSERT, Node: " + this.getSuperNodeNameForMe() 
+							+ ", Key added to the keys controlled by this node", logs_types.MINIMAL);
+					this.mykeys.add(new_key);
+					return;
+				} else {
+					print("INSERT, Node: " + this.getSuperNodeNameForMe() 
+						+ ", ERROR, key already in the key list", logs_types.MINIMAL);
+				}
+				return;
+			}
+			
+			//Find the correct node which the key belongs
+			Node target = find_successor(new_key);
+			//Create the message
+			insert_message m = new insert_message(this, new_key);
+			if (target != null) {
+				//If the successor exist and is the right node send the insert message to him
+				print("INSERT, Node: " + this.getSuperNodeNameForMe()
+					+ ", I send an insert message to the node " + target.getSuperNodeNameForMe()
+					+ " to insert the key", logs_types.VERBOSE);
+				schedule_message(target, "on_insert_message", m, 1);
+			}
+			else {
+				Node closest = closest_preceding_node(m.key);
+				if(this.getId().equals(closest.getId())) {
+					print("INSERT, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but the object is not in my range:"
+							+ "\n\tTHIS IS CLEARLY AND ERROR", logs_types.MINIMAL);
+					return;
+				}
+				print("INSERT, Node: " + this.getSuperNodeNameForMe()
+					+ ", I send an insert message to node " + closest.getSuperNodeNameForMe()
+					+ " to handle the key", logs_types.VERBOSE);
+				schedule_message(closest, "on_insert_message", m, 1);
+			}
 		}
-		else {
-			//TODO ask the successor with the closest_preceding_node
+	}
+	
+	public void on_insert_message(insert_message message) {
+		if(this.state == Node_state.ACTIVE) {
+			BigInteger new_key = message.key;
+			// Check if the key belongs to this interval
+			if (this.predecessor != null && check_interval(this.predecessor.getId(), this.getId(), new_key, false, false)) {
+				// Check if the key is already in the node keys list
+				if (check_element(new_key) == null) {
+					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() 
+							+ ", Key added to the keys controlled by this node", logs_types.MINIMAL);
+					this.mykeys.add(new_key);	
+				} else {
+					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() 
+						+ ", ERROR, key already in the key list", logs_types.MINIMAL);
+				}
+				return;
+			}
+			
+			//Find the correct node which the key belongs
+			Node target = find_successor(new_key);
+			//Create the message
+			insert_message m = new insert_message(this, new_key);
+			if (target != null) {
+				//If the successor exist and is the right node send the insert message to him
+				print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe()
+					+ ", I send an insert message to the node " + target.getSuperNodeNameForMe()
+					+ " to insert the key", logs_types.VERBOSE);
+				schedule_message(target, "on_insert_message", m, 1);
+			}
+			else {
+				Node closest = closest_preceding_node(m.key);
+				if(this.getId().equals(closest.getId())) {
+					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but the object is not in my range:"
+							+ "\n\tTHIS IS CLEARLY AND ERROR", logs_types.MINIMAL);
+					return;
+				}
+				print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe()
+					+ ", I send an insert message to node " + closest.getSuperNodeNameForMe()
+					+ " to handle the key", logs_types.VERBOSE);
+				schedule_message(closest, "on_insert_message", m, 1);
+			}
 		}
 	}
 	
