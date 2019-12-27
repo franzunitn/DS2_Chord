@@ -550,7 +550,7 @@ public class Node{
 				//than schedule a message to that node if it responds the state will change 
 				//if not that means it is failed
 				Check_predecessor_message m = new Check_predecessor_message(this, this.predecessor, this.state.getValue());
-				schedule_message(this.predecessor,"on_check_predecessor_receive", m, 1);
+				schedule_message(this.predecessor, "on_check_predecessor_receive", m, 1);
 				
 				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
 				schedule_message(this, "timeout_predecessor_failed", m, 5);

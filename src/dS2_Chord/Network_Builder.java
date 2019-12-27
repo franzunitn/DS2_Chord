@@ -106,7 +106,7 @@ public class Network_Builder implements ContextBuilder<Object> {
 			current_nodes.add(n);
 		}
 		/*
-		//MANUALLY create some node to test fixfinger
+		//MANUALLY create some node with closer range of id to test fixfinger
 		for (int i = 0; i < nodes; i++) {
 			BigInteger next = new BigInteger("" + i);
 			//create the new key

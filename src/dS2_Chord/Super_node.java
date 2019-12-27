@@ -463,13 +463,64 @@ public class Super_node {
 			}
 			
 			//check predecessor procedure
-			if(tick_count % this.stabilize_tick == 0) {
+			if(tick_count % (this.stabilize_tick * 5)  == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
 
 			}
 		}
 		
+		print("CURRENT ACTIVE NODES: " + active_nodes.size());
+	}
+	
+	@ScheduledMethod (start = 1, interval = 1)
+	public void test_check_predecessor() {
+		Object a = new Object();
+		if(!this.test) {
+			this.test = true;
+				
+			//schedule all the join
+			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
+			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
+			
+			//schedule a leave
+			schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(2), false, 50);
+		}
+			
+			
+			
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}
+		}
+			
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+				
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+				}
+				
+			//check predecessor procedure
+			if(tick_count % (this.stabilize_tick * 5)  == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+				}
+		}
+			
 		print("CURRENT ACTIVE NODES: " + active_nodes.size());
 	}
 	
