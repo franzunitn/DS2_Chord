@@ -2,22 +2,28 @@ package dS2_Chord;
 
 import java.awt.Color;
 import repast.simphony.visualizationOGL2D.DefaultStyleOGL2D;
-import dS2_Chord.Node_state;
 import dS2_Chord.Node;
+import dS2_Chord.Node.Node_state;
 public class NodeStyle extends DefaultStyleOGL2D {
 
 	@Override
 	public Color getColor(Object agent) {
 		Node ag = (Node) agent;
-		Node_state state = ag.get_state();
-		
-		if(state == Node_state.ACTIVE) {
+		int state = ag.get_state();
+		//has recived a new key 
+		if(ag.get_new_key_added()) {
+			return Color.green;
+		}
+		//active 
+		if(state == 0) {
 			return Color.blue;
 		}
-		if(state == Node_state.INACTIVE) {
+		//inactive (leave)
+		if(state == 1) {
 			return Color.gray;
 		}
-		if(state == Node_state.FAILED) {
+		//fail 
+		if(state == 2) {
 			return Color.red;
 		}
 		return Color.blue;
@@ -27,7 +33,7 @@ public class NodeStyle extends DefaultStyleOGL2D {
 	@Override
 	public float getScale(Object object) {
 		// TODO Auto-generated method stub
-		return 5;
+		return 1;
 	}
 
 	

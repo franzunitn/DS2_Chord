@@ -2,4 +2,5 @@
 	<projection type="continuous space" id="space"></projection>
 	<projection type="grid" id="grid"></projection>
 	<projection type="network" id="chord"></projection>
+	<projection type="network" id="fingersNetwork"></projection>
 </context>

@@ -73,6 +73,8 @@ public class Node{
 
 	public Super_node snode;
 	
+	private boolean new_key_added = false;
+	
 	//Node Constructor
 	public Node(BigInteger id) {
 		this.id = id;
@@ -384,6 +386,7 @@ public class Node{
 			if(n != null) {
 				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + " the successor of indx is my successor", logs_types.VERBOSE);
 				this.fingertable.setNewNode(this.next, n);
+				update_fingers_graphic();
 			}else {
 				
 				//create and schedule a message to the closest preceding node 
@@ -458,6 +461,8 @@ public class Node{
 		
 		//update the row 
 		this.fingertable.setNewNode(m.next, m.source);
+		
+		update_fingers_graphic();
 	}
 	
 	
@@ -646,6 +651,11 @@ public class Node{
 					m.source.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
 			//acquire the keys
 			this.mykeys.addAll(m.keys);
+			//become green if i recive a new key, schedule remove_graphic then 3 ticks to become again blue 
+			if (m.is_insert) {
+				this.new_key_added = true;
+				schedule_message(this, "remove_graphic", null, 3);
+			}
 		}else {
 			//case where the node is inactive but can forward the message maybe
 		}
@@ -689,7 +699,7 @@ public class Node{
 			ArrayList<BigInteger> k = new ArrayList<BigInteger>();
 			k.add(new_key);
 			//new Transfer message with only a key
-			Transfer_message m = new Transfer_message(this, target, k);
+			Transfer_message m = new Transfer_message(this, target, k, true);
 			schedule_message(target, "on_transfer_message", m, 1);
 		}
 		else {
@@ -697,6 +707,10 @@ public class Node{
 		}
 	}
 	
+	//used to become again blue after recive a new key 
+		public void remove_graphic () {
+			this.new_key_added = false;
+		}
 	
 	/**
 	 * This method is used to check if a target id is in the interval between [start, finish]
@@ -743,9 +757,15 @@ public class Node{
 	 */
 	private static void schedule_message(Node target, String method, Object message, int delay) {
 		//schedule receive of a fins successor message in the next tick
-		double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
-		RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, message);
+		if (message != null) {
+			double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, message);
+		} else {
+			double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+		}
 	}
 
 	public boolean is_join() {
@@ -772,4 +792,30 @@ public class Node{
 		if(log.getValue() <= this.log_level.getValue())
 			print(s);
 	}
+	
+	public Boolean get_new_key_added () {
+		return this.new_key_added;
+	}
+	
+	//update the graphic of the fingers have to be called on each modification of the fingertable 
+		private void update_fingers_graphic () {
+			ArrayList<Node> myfingers = this.fingertable.getAllSucc();
+			Context <Object> context = ContextUtils.getContext(this);
+			Network<Object> fingerNetwork = (Network<Object>)context.getProjection("fingersNetwork");
+			//remove all previous edges 
+			ArrayList<RepastEdge<Object>> edges = new ArrayList<RepastEdge<Object>>();
+			Iterable<RepastEdge<Object>>  edgesiter = fingerNetwork.getOutEdges(this);	
+			for (RepastEdge<Object> edge : edgesiter) {
+				edges.add(edge);
+			}
+			for (RepastEdge<Object> edge : edges) {
+				fingerNetwork.removeEdge(edge);
+			}
+			
+			//add edges from this to all the fingers 
+			for (Node node : myfingers) {
+				fingerNetwork.addEdge(this, node);
+			}
+			
+		}
 }

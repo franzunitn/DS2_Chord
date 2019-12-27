@@ -54,6 +54,11 @@ public class Network_Builder implements ContextBuilder<Object> {
 				"chord", context, true);
 		netBuilder_messages.buildNetwork();
 		
+		//network to show the fingers 
+		NetworkBuilder<Object> fingersNetwork = new NetworkBuilder<Object>(
+				"fingersNetwork", context, true);
+		fingersNetwork.buildNetwork();
+		
 		
 		//continuous space declaration used to visualize the nodes
 		ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder
