@@ -240,7 +240,7 @@ public class Super_node {
 	 * and also if with the stabilize and the fix fingers the 
 	 * ring stabilize after a while
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void testJoin() {
 		Object a = new Object();
 		
@@ -447,7 +447,6 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 60);
 				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 60);
 			}
-			schedule_action(this.all_nodes.get(1500), "printActualState", a, false, 15000);
 		}
 		
 		
@@ -481,6 +480,395 @@ public class Super_node {
 			if(tick_count % this.stabilize_tick == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+
+			}
+		}
+		
+		print("CURRENT ACTIVE NODES: " + active_nodes.size());
+	}
+	
+	/**
+	 * test if a use correctly the fingertable
+	 */
+	//@ScheduledMethod (start = 1, interval = 1)
+	public void test_finger() {
+		Object a = new Object();
+		if(!this.test) {
+			this.test = true;
+			
+			//test if some nodes leave in order
+			if(true) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 35);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 100);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 160);
+				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 170);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 180);
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 190);
+			}
+		}
+		
+		
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
+			}
+			
+			//check predecessor procedure
+			if(tick_count % 20 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+
+			}
+		}
+		
+		print("CURRENT ACTIVE NODES: " + active_nodes.size());
+	}
+	
+	/**
+	 * test if keys are handled correctly
+	 */
+	@ScheduledMethod (start = 1, interval = 1)
+	public void test_keys() {
+		Object a = new Object();
+		if(!this.test) {
+			this.test = true;
+			
+			//test if one key is inserted correctly
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 200);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 210);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 210);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test if three keys are inserted correctly with message passing to successor
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				BigInteger key_two = k.encryptThisString("key_two");
+				BigInteger key_three = k.encryptThisString("key_three");
+				schedule_action(this.all_nodes.get(1), "insert", key_one, true, 200);
+				schedule_action(this.all_nodes.get(1), "insert", key_two, true, 210);
+				schedule_action(this.all_nodes.get(1), "insert", key_three, true, 220);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 250);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test if three keys are inserted correctly with message passing using the fingertable
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				BigInteger key_two = k.encryptThisString("key_two");
+				BigInteger key_three = k.encryptThisString("key_three");
+				schedule_action(this.all_nodes.get(1), "insert", key_one, true, 200);
+				schedule_action(this.all_nodes.get(1), "insert", key_two, true, 210);
+				schedule_action(this.all_nodes.get(1), "insert", key_three, true, 220);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 250);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 250);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test duplicate key on the same node
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 200);
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 205);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 210);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 210);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test duplicate key on different nodes
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 200);
+				schedule_action(this.all_nodes.get(1), "insert", key_one, true, 205);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 210);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 210);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test lookup on the handler node
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 200);
+				
+				//Schedule the key lookup
+				schedule_action(this.all_nodes.get(0), "lookup", key_one, true, 210);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 250);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test lookup on the handler node of an unknown key
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				BigInteger key_two = k.encryptThisString("key_two");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 200);
+				
+				//Schedule the key lookup
+				schedule_action(this.all_nodes.get(0), "lookup", key_two, true, 210);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 250);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test lookup on the successor of a known key and an unknown key
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				BigInteger key_two = k.encryptThisString("key_two");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 200);
+				
+				//Schedule the key lookup
+				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 210);
+				schedule_action(this.all_nodes.get(1), "lookup", key_two, true, 220);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 250);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test lookup on the successor of a known key and an unknown key
+			if(false) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				BigInteger key_two = k.encryptThisString("key_two");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 200);
+				
+				//Schedule the key lookup
+				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 210);
+				schedule_action(this.all_nodes.get(1), "lookup", key_two, true, 220);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 250);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 300);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 300);
+			}
+			
+			//test lookup 
+			if(true) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 30);
+				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 40);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				
+				//Schedule the key insertion
+				Key k = new Key();
+				BigInteger key_one = k.encryptThisString("key_one");
+				BigInteger key_two = k.encryptThisString("key_two");
+				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 150);
+				
+				//Schedule the key lookup
+				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 2000);
+				schedule_action(this.all_nodes.get(1), "lookup", key_two, true, 2100);
+			}
+			
+		}
+		
+		
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
+			}
+			
+			//check predecessor procedure
+			if(tick_count % 20 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
 
 			}
 		}
