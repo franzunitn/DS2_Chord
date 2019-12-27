@@ -240,7 +240,7 @@ public class Super_node {
 	 * and also if with the stabilize and the fix fingers the 
 	 * ring stabilize after a while
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void testJoin() {
 		Object a = new Object();
 		
@@ -432,7 +432,6 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 60);
 				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 60);
 			}
-			schedule_action(this.all_nodes.get(1500), "printActualState", a, false, 15000);
 		}
 		
 		
@@ -473,23 +472,39 @@ public class Super_node {
 		print("CURRENT ACTIVE NODES: " + active_nodes.size());
 	}
 	
+	
+	/**
+	 * test if a use correctly the fingertable
+	 */
 	@ScheduledMethod (start = 1, interval = 1)
-	public void test_check_predecessor() {
+	public void test_finger() {
 		Object a = new Object();
 		if(!this.test) {
 			this.test = true;
+			
+			//test if some nodes leave in order
+			if(true) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 35);
 				
-			//schedule all the join
-			schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-			schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
-			schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
-			
-			//schedule a leave
-			schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(2), false, 50);
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 100);
+				
+				//schedule the leave
+				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 160);
+				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 170);
+				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 180);
+				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 190);
+			}
 		}
-			
-			
-			
+		
+		
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
 		for(Node o: this.all_nodes) {
 			//if a node is active
@@ -497,30 +512,32 @@ public class Super_node {
 				active_nodes.add(o);
 			}
 		}
-			
+
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-			
+		
 		for(Node o : active_nodes) {
 			//check if it is the time to schedule a stabilize
 			if(tick_count % this.stabilize_tick == 0) {
 				
 				schedule_action(o, "stabilize", a, false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
 			}
-				
+			
 			//check if is the time to schedule a fixFingers
 			if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFingers", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-				}
-				
-			//check predecessor procedure
-			if(tick_count % (this.stabilize_tick * 5)  == 0) {
-				schedule_action(o, "check_predecessor", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
-				}
-		}
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
+			}
 			
+			//check predecessor procedure
+			if(tick_count % 20 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+
+			}
+		}
+		
 		print("CURRENT ACTIVE NODES: " + active_nodes.size());
 	}
 	
