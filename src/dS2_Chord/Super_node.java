@@ -248,7 +248,7 @@ public class Super_node {
 			this.test = true;
 			
 			//simple join test where the nodes join in order (0->1->2-> .. ) and join to the same node (0)
-			if(true) {
+			if(false) {
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
 				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 15);
@@ -376,7 +376,7 @@ public class Super_node {
 	/**
 	 * test if a node that leave the network behave well
 	 */
-	//@ScheduledMethod (start = 1, interval = 1)
+	@ScheduledMethod (start = 1, interval = 1)
 	public void test_leave() {
 		Object a = new Object();
 		if(!this.test) {
@@ -432,6 +432,29 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 60);
 				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 60);
 			}
+			
+			//test if the finger table is fixed from check predecessor after some ticks
+			if(true) {
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), true, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), true, 25);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), true, 35);
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
+				
+				//schedule leave
+				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 60);
+				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 60);
+				
+				//print status again
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
+			}
 		}
 		
 		
@@ -476,14 +499,14 @@ public class Super_node {
 	/**
 	 * test if a use correctly the fingertable
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_finger() {
 		Object a = new Object();
 		if(!this.test) {
 			this.test = true;
 			
 			//test if some nodes leave in order
-			if(true) {
+			if(false) {
 				//schedule all the join
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
@@ -531,7 +554,7 @@ public class Super_node {
 			}
 			
 			//check predecessor procedure
-			if(tick_count % 20 == 0) {
+			if(tick_count % (this.stabilize_tick * 5) == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
 

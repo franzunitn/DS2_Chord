@@ -1,6 +1,7 @@
 package dS2_Chord;
 import dS2_Chord.Find_successor_message;
 import dS2_Chord.Find_predecessor_message;
+import dS2_Chord.Change_neighbor_leave_message;
 import dS2_Chord.Key;
 import dS2_Chord.Raw;
 import dS2_Chord.FingerTable;
@@ -554,7 +555,7 @@ public class Node{
 				schedule_message(this.predecessor, "on_check_predecessor_receive", m, 1);
 				
 				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
-				schedule_message(this, "timeout_predecessor_failed", m, 10);
+				schedule_message(this, "timeout_predecessor_failed", m,  4);
 			}else {
 				print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
 						" has predecessor NULL", logs_types.VERYVERBOSE);
@@ -634,6 +635,41 @@ public class Node{
 				Transfer_message m = new Transfer_message(this, this.successor, this.mykeys);
 				//schedule the message
 				schedule_message(this.successor, "on_transfer_message", m, 1);
+				
+				//than schedule a message to my SUCCESSOR telling him to set his predecessor to my predecessor
+				Change_neighbor_leave_message cp;
+				if(this.predecessor != null) {
+					cp = new Change_neighbor_leave_message(this,
+																						this.successor, 
+																						this.predecessor, 
+																						true,
+																						false, 
+																						false);
+				}else {
+					//only tell my successor that i'm leaving and set his predecessor to null
+					cp = new Change_neighbor_leave_message(this, 
+																						this, 
+																						this, 
+																						true, 
+																						false, 
+																						true);
+				}
+				
+				schedule_message(this.successor, "on_change_neigbour_leave", cp, 1);
+				
+				//than schedule a message to my predecessor (if not null) telling him to set his successor to my successor
+				if(this.predecessor != null) {
+					Change_neighbor_leave_message cs = new Change_neighbor_leave_message(this,
+																						this.successor,
+																						this.predecessor, 
+																						false, 
+																						true, 
+																						false);
+					schedule_message(this.predecessor, "on_change_neigbour_leave", cs, 1);
+				}
+				
+				
+				
 				//than leave the network
 				this.state = Node_state.INACTIVE;
 			}
@@ -651,6 +687,29 @@ public class Node{
 			//case where the node is inactive but can forward the message maybe
 		}
 	}
+	
+	public void on_change_neigbour_leave(Change_neighbor_leave_message m) {
+		print("ON_CHANGE: Node: " + this.getSuperNodeNameForMe() + " has received a change message form: " +
+				m.source.getSuperNodeNameForMe(), logs_types.VERBOSE);
+		
+		if(m.is_predecessor_null) {
+			print("ON_CHANGE: " + "\t telling me that his predecessor is null so set mine to null", logs_types.VERBOSE);
+			this.predecessor = null;
+		}else {
+			if(m.change_predecessor) {
+				print("ON_CHANGE: " + "\t telling me that his PREDECESSOR is: " +
+						m.new_predecessor.getSuperNodeNameForMe() + 
+						" so change mine", logs_types.VERBOSE);
+				this.predecessor = m.new_predecessor;
+			}else if(m.change_successor) {
+				print("ON_CHANGE: " + "\t telling me that his SUCCESSOR is: " +
+						m.new_successor.getSuperNodeNameForMe() + 
+						" so change mine", logs_types.VERBOSE);
+				this.successor = m.new_successor;
+			}
+		}
+	}
+	
 	/**
 	 * Method used to simulate a node failure
 	 */
