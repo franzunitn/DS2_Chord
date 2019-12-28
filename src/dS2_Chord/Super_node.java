@@ -819,7 +819,12 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
 				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
 				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 30);
-				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 40);
+				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 31);
+				schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(0), false, 32);
+				schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(0), false, 33);
+				schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(0), false, 34);
+				schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(0), false, 35);
+				schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(0), false, 36);
 				
 				//print status
 				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
@@ -829,7 +834,8 @@ public class Super_node {
 				Key k = new Key();
 				BigInteger key_one = k.encryptThisString("key_one");
 				BigInteger key_two = k.encryptThisString("key_two");
-				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 150);
+				schedule_action(this.all_nodes.get(3), "insert", key_one, true, 50);
+				schedule_action(this.all_nodes.get(2), "insert", key_two, true, 51);
 				
 				//Schedule the key lookup
 				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 2000);
