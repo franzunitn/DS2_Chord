@@ -246,7 +246,14 @@ public class Super_node {
 		
 		if(!this.test) {
 			this.test = true;
-			
+			if (true) {
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				for (Node n : this.all_nodes) {
+					if (!n.equals(this.all_nodes.get(0))) {
+						schedule_action(n, "join", this.all_nodes.get(0), false, 5);
+					}
+				}
+			}
 			//simple join test where the nodes join in order (0->1->2-> .. ) and join to the same node (0)
 			if(false) {
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
@@ -264,6 +271,10 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
 				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
 				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
+				//add test for the insertion of a key 
+				Key key_gen = new Key();
+				BigInteger new_key = key_gen.encryptThisString("Hello");
+				schedule_action(this.all_nodes.get(3), "insert", new_key, false, 55);
 			}
 			
 			//join test where the node join in different order (0->3->2->1->...) but to the same node (0)
@@ -283,6 +294,10 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 40);
 				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 40);
 				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 40);
+				
+				
+				
+				
 			}
 			
 			//join test where the node join not in order and more than one in the same tick but all to the same node (0)
@@ -832,7 +847,12 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
 				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
 				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 30);
-				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 40);
+				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 31);
+				schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(0), false, 32);
+				schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(0), false, 33);
+				schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(0), false, 34);
+				schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(0), false, 35);
+				schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(0), false, 36);
 				
 				//print status
 				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
@@ -842,7 +862,8 @@ public class Super_node {
 				Key k = new Key();
 				BigInteger key_one = k.encryptThisString("key_one");
 				BigInteger key_two = k.encryptThisString("key_two");
-				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 150);
+				schedule_action(this.all_nodes.get(3), "insert", key_one, true, 50);
+				schedule_action(this.all_nodes.get(2), "insert", key_two, true, 51);
 				
 				//Schedule the key lookup
 				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 2000);

@@ -69,6 +69,14 @@ public class FingerTable {
 		return this.finger.size();
 	}
 	
+	public ArrayList<Node> getAllSucc() {
+		ArrayList<Node> res = new ArrayList<Node>();
+		for (Raw r : this.finger) {
+			res.add(r.successor);
+		}
+		return res;
+	}
+	
 	public int getDimension() {
 		return this.dimension;
 	}
