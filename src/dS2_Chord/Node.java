@@ -86,7 +86,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.VERYVERBOSE;
+		this.log_level = logs_types.MINIMAL;
 	}
 	
 	public String getSuperNodeNameForMe() {
