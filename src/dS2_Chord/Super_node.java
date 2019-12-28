@@ -416,9 +416,9 @@ public class Super_node {
 			if(false) {
 				//schedule all the join
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), true, 15);
-				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), true, 25);
-				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), true, 35);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 35);
 				
 				//print status
 				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
@@ -437,15 +437,15 @@ public class Super_node {
 			if(true) {
 				//schedule all the join
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), true, 15);
-				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), true, 25);
-				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), true, 35);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
+				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 35);
 				
 				//print status
 				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
 				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
 				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
-				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
+				//schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
 				
 				//schedule leave
 				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 60);
@@ -489,6 +489,11 @@ public class Super_node {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
 
+			}
+			
+			//check predecessor procedure
+			if(tick_count % 5  == 0) {
+				schedule_action(o, "printActualState", a, false, 1);
 			}
 		}
 		
@@ -567,7 +572,7 @@ public class Super_node {
 	/**
 	 * test if keys are handled correctly
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_keys() {
 		Object a = new Object();
 		if(!this.test) {
@@ -821,7 +826,7 @@ public class Super_node {
 			}
 			
 			//test lookup 
-			if(true) {
+			if(false) {
 				//schedule all the join
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);

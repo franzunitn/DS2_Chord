@@ -134,7 +134,7 @@ public class Node{
 	 * @param n a node already in the ring
 	 * */ 
 	public void join(Node n, boolean is_first) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state != Node_state.FAILED) {
 			//check if node n is still in the ring or has fail or leave
 			if(is_first) {
 				
@@ -155,7 +155,7 @@ public class Node{
 				Find_successor_message m = new Find_successor_message(this);
 				print("Node: " + snode.get_mapped_id(this.id) + " has asked to " + 
 				snode.get_mapped_id(n.getId()) + " to find his successor",
-						logs_types.VERYVERBOSE);
+						logs_types.VERBOSE);
 				
 				//schedule the receive of a message
 				schedule_message(n, "on_find_successor_receive", m, 1);
@@ -247,7 +247,7 @@ public class Node{
 	 */
 	public void on_find_predecessor_receive(Find_predecessor_message m) {
 		if(this.state == Node_state.ACTIVE) {
-			//reply with my predecessor (if not null)
+			//reply with my predecessor
 			Find_predecessor_reply rply;
 			if(this.predecessor != null) {
 				
@@ -277,14 +277,13 @@ public class Node{
 	 * A reply to a find predecessor request. 
 	 * if my successor has changed i set my successor predecessor
 	 * to my successor and than notify him.
-	 * @param x
+	 * @param x the reply message
 	 */
 	public void on_find_predecessor_reply(Find_predecessor_reply x) {
 		if(this.state == Node_state.ACTIVE) {
 			//if the predecessor of my successor is between me and my successor 
 			//i set my successor to him and than notify him.
-			if(!x.is_null) {
-																						
+			if(!x.is_null) {																	
 				if(check_interval(this.id, this.successor.getId(), x.n.getId(), false, false)) {
 					
 					print("Node: " + snode.get_mapped_id(this.id) + " has received a find predecessor REPLY from: " +
@@ -306,8 +305,7 @@ public class Node{
 						this.successor = x.n;
 					}
 				}
-			}
-			else {
+			}else {
 				
 				print("Node: " + snode.get_mapped_id(this.id) + " receive a find prdecessor REPLY from: " +
 				snode.get_mapped_id(x.source.getId()) + " telling me that his predecessor is NULL ",
