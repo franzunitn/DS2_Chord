@@ -87,7 +87,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.MINIMAL;
+		this.log_level = logs_types.VERYVERBOSE;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -686,29 +686,53 @@ public class Node{
 					m.source.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
 			//acquire the keys
 			this.mykeys.addAll(m.keys);
-		}else {
-			//case where the node is inactive but can forward the message maybe
+		}else if(this.state == Node_state.INACTIVE) {
+			schedule_message(this.successor, "on_transfer_message", m, 1);
 		}
 	}
 	
 	public void on_change_neigbour_leave(Change_neighbor_leave_message m) {
 		print("ON_CHANGE: Node: " + this.getSuperNodeNameForMe() + " has received a change message form: " +
 				m.source.getSuperNodeNameForMe(), logs_types.VERBOSE);
-		
-		if(m.is_predecessor_null) {
-			print("ON_CHANGE: " + "\t telling me that his predecessor is null so set mine to null", logs_types.VERBOSE);
-			this.predecessor = null;
-		}else {
+		if(this.state == Node_state.ACTIVE) {
+			if(m.is_predecessor_null) {
+				print("ON_CHANGE: " + "\t telling me that his predecessor is null so set mine to null", logs_types.VERBOSE);
+				this.predecessor = null;
+			}else {
+				if(m.change_predecessor) {
+					print("ON_CHANGE: " + "\t telling me that his PREDECESSOR is: " +
+							m.new_predecessor.getSuperNodeNameForMe() + 
+							" so change mine", logs_types.VERBOSE);
+					this.predecessor = m.new_predecessor;
+				}else if(m.change_successor) {
+					print("ON_CHANGE: " + "\t telling me that his SUCCESSOR is: " +
+							m.new_successor.getSuperNodeNameForMe() + 
+							" so change mine", logs_types.VERBOSE);
+					this.successor = m.new_successor;
+				}
+			}
+		}else if(this.state == Node_state.INACTIVE) {
+			//case when i have to forward the message
 			if(m.change_predecessor) {
-				print("ON_CHANGE: " + "\t telling me that his PREDECESSOR is: " +
-						m.new_predecessor.getSuperNodeNameForMe() + 
-						" so change mine", logs_types.VERBOSE);
-				this.predecessor = m.new_predecessor;
+				//forward to my successor
+				print("ON_CHANGE: " + "\t i'm INACTIVE so foreward to my successor: " +
+						this.successor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+				//send to my successor
+				schedule_message(this.successor, "on_change_neigbour_leave", m, 1);
 			}else if(m.change_successor) {
-				print("ON_CHANGE: " + "\t telling me that his SUCCESSOR is: " +
-						m.new_successor.getSuperNodeNameForMe() + 
-						" so change mine", logs_types.VERBOSE);
-				this.successor = m.new_successor;
+				//if my predecessor is not null
+				if(this.predecessor != null) {
+					//forward to my predecessor
+					print("ON_CHANGE: " + "\t i'm INACTIVE so foreward to my predecessor: " +
+							this.predecessor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+					//send to my predecessor
+					schedule_message(this.predecessor, "on_change_neigbour_leave", m, 1);
+				}else {
+					//case when my predecessor is null so i can't foreward the message
+					print("ON_CHANGE: " + "\t i'm INACTIVE and my predecessor is NULL so i can't forward " +
+							this.predecessor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+				}
+				
 			}
 		}
 	}

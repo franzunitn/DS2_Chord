@@ -62,7 +62,7 @@ public class Super_node {
 	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
 	 * for example fixfinger and stabilize method are schedule inside here.
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -409,7 +409,7 @@ public class Super_node {
 	/**
 	 * test if a node that leave the network behave well
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_leave() {
 		Object a = new Object();
 		if(!this.test) {
@@ -467,26 +467,20 @@ public class Super_node {
 			}
 			
 			//test if the finger table is fixed from check predecessor after some ticks
-			if(true) {
+			if(false) {
 				//schedule all the join
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
 				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
 				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 35);
-				
-				//print status
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 50);
-				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
-				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
-				//schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
+				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 45);
+				schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(0), false, 55);
 				
 				//schedule leave
-				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 60);
-				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 60);
+				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 100);
+				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 100);
+				schedule_action(this.all_nodes.get(5), "leave", this.all_nodes.get(0), false, 101);
 				
-				//print status again
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
-				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
 			}
 		}
 		
