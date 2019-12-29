@@ -74,6 +74,8 @@ public class Node{
 
 	public Super_node snode;
 	
+	private boolean new_key_added = false;
+	
 	//Node Constructor
 	public Node(BigInteger id) {
 		this.id = id;
@@ -85,7 +87,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.VERYVERBOSE;
+		this.log_level = logs_types.MINIMAL;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -384,6 +386,7 @@ public class Node{
 			if(n != null) {
 				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + " the successor of indx is my successor", logs_types.VERBOSE);
 				this.fingertable.setNewNode(this.next, n);
+				update_fingers_graphic();
 			}else {
 				
 				//create and schedule a message to the closest preceding node 
@@ -458,6 +461,8 @@ public class Node{
 		
 		//update the row 
 		this.fingertable.setNewNode(m.next, m.source);
+		
+		update_fingers_graphic();
 	}
 	
 	
@@ -868,6 +873,9 @@ public class Node{
 					print("INSERT, Node: " + this.getSuperNodeNameForMe() 
 							+ ", Key added to the keys controlled by this node", logs_types.MINIMAL);
 					this.mykeys.add(new_key);
+					//become green for 10 ticks 
+					this.new_key_added = true;
+					schedule_message(this, "remove_graphic", null, 3);
 					return;
 				} else {
 					print("INSERT, Node: " + this.getSuperNodeNameForMe() 
@@ -886,6 +894,7 @@ public class Node{
 					+ ", I send an insert message to the node " + target.getSuperNodeNameForMe()
 					+ " to insert the key", logs_types.VERBOSE);
 				schedule_message(target, "on_insert_message", m, 1);
+				addEdge("insertNetwork", this, target);
 			}
 			else {
 				Node closest = closest_preceding_node(m.key);
@@ -898,6 +907,7 @@ public class Node{
 					+ ", I send an insert message to node " + closest.getSuperNodeNameForMe()
 					+ " to handle the key", logs_types.VERBOSE);
 				schedule_message(closest, "on_insert_message", m, 1);
+				addEdge("insertNetwork", this, closest);
 			}
 		}
 	}
@@ -911,7 +921,9 @@ public class Node{
 				if (check_element(new_key) == null) {
 					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() 
 							+ ", Key added to the keys controlled by this node", logs_types.MINIMAL);
-					this.mykeys.add(new_key);	
+					this.mykeys.add(new_key);
+					this.new_key_added = true;
+					schedule_message(this, "remove_graphic", null, 3);
 				} else {
 					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() 
 						+ ", ERROR, key already in the key list", logs_types.MINIMAL);
@@ -929,6 +941,7 @@ public class Node{
 					+ ", I send an insert message to the node " + target.getSuperNodeNameForMe()
 					+ " to insert the key", logs_types.VERBOSE);
 				schedule_message(target, "on_insert_message", m, 1);
+				addEdge("insertNetwork", this, target);
 			}
 			else {
 				Node closest = closest_preceding_node(m.key);
@@ -941,10 +954,15 @@ public class Node{
 					+ ", I send an insert message to node " + closest.getSuperNodeNameForMe()
 					+ " to handle the key", logs_types.VERBOSE);
 				schedule_message(closest, "on_insert_message", m, 1);
+				addEdge("insertNetwork", this, closest);
 			}
 		}
 	}
 	
+	//used to become again blue after recive a new key 
+		public void remove_graphic () {
+			this.new_key_added = false;
+		}
 	
 	/**
 	 * This method is used to check if a target id is in the interval between [start, finish]
@@ -991,9 +1009,15 @@ public class Node{
 	 */
 	private static void schedule_message(Node target, String method, Object message, int delay) {
 		//schedule receive of a fins successor message in the next tick
-		double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
-		RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, message);
+		if (message != null) {
+			double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, message);
+		} else {
+			double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+		}
 	}
 
 	public boolean is_join() {
@@ -1020,4 +1044,54 @@ public class Node{
 		if(log.getValue() <= this.log_level.getValue())
 			print(s);
 	}
+	
+	public Boolean get_new_key_added () {
+		return this.new_key_added;
+	}
+	
+	//update the graphic of the fingers have to be called on each modification of the fingertable 
+		private void update_fingers_graphic () {
+			ArrayList<Node> myfingers = this.fingertable.getAllSucc();
+			Context <Object> context = ContextUtils.getContext(this);
+			Network<Object> fingerNetwork = (Network<Object>)context.getProjection("fingersNetwork");
+			//remove all previous edges 
+			ArrayList<RepastEdge<Object>> edges = new ArrayList<RepastEdge<Object>>();
+			Iterable<RepastEdge<Object>>  edgesiter = fingerNetwork.getOutEdges(this);	
+			for (RepastEdge<Object> edge : edgesiter) {
+				edges.add(edge);
+			}
+			for (RepastEdge<Object> edge : edges) {
+				fingerNetwork.removeEdge(edge);
+			}
+			
+			//add edges from this to all the fingers 
+			for (Node node : myfingers) {
+				fingerNetwork.addEdge(this, node);
+			}
+			
+		}
+		//add an edge and remove all previous 
+		private void addEdge (String network_name, Node source, Node target) {
+			Context <Object> context = ContextUtils.getContext(this);
+			Network<Object> network = (Network<Object>)context.getProjection(network_name);
+			network.addEdge(source, target);
+			schedule_message(source, "removeEdge", "insertNetwork", 1);
+		}
+		
+		//remove all exit edges from this node
+		public void removeEdge (String network_name) {
+			Context <Object> context = ContextUtils.getContext(this);
+			Network<Object> network = (Network<Object>)context.getProjection(network_name);
+			//remove all previous edges 
+			ArrayList<RepastEdge<Object>> edges = new ArrayList<RepastEdge<Object>>();
+			Iterable<RepastEdge<Object>>  edgesiter = network.getOutEdges(this);	
+			for (RepastEdge<Object> edge : edgesiter) {
+				edges.add(edge);
+			}
+			for (RepastEdge<Object> edge : edges) {
+				network.removeEdge(edge);
+			}
+			
+			
+		}
 }

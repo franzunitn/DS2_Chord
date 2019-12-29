@@ -54,15 +54,15 @@ public class Super_node {
 		this.stabilize_tick = stabilize_tick;
 		this.fix_finger_tick = fix_finger_tick;
 		this.d = d;
-		
+		this.k = new Hashtable();
 		this.test = false;
 	}
 
-	//@ScheduledMethod (start = 1, interval = 1)
 	/**
 	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
 	 * for example fixfinger and stabilize method are schedule inside here.
 	 */
+	@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -76,20 +76,28 @@ public class Super_node {
 		ArrayList<Node> nodes_to_join = new ArrayList<Node>();
 		//all the nodes that are already active in this tick
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		ArrayList<Node> failed_nodes = new ArrayList<Node>();
 		
 		for(Node o: this.all_nodes) {
 			//if o is ACTIVE
 			if(o.get_state() == 0) {
 				active_nodes.add(o);
 			}
-		}
-		
-		for(Node o: this.all_nodes) {
 			//if a node is INACTIVE
-			if(o.get_state() == 1 && !current_nodes.contains(o)) {
+			if(o.get_state() == 1 /*&& !current_nodes.contains(o) */) {
 				nodes_to_join.add(o);
 			}
+			if (o.get_state() == 2 && !failed_nodes.contains(o)) {
+				failed_nodes.add(o);
+			}
 		}
+		/*print("Active nodes: " + active_nodes.size() + 
+				", nodes_to_join are: " + nodes_to_join.size() + 
+				", failed nodes are: " + failed_nodes.size() + 
+				", Total:" + this.all_nodes.size());*/
+		
+
+		ArrayList<Node> joined_nodes = new ArrayList<Node>();
 		//scan all the nodes that aren't already in the network and for each see if can join
 		for(Node o : nodes_to_join) {
 			if(StdRandom.bernoulli(this.join_prob)) {
@@ -99,9 +107,11 @@ public class Super_node {
 					if(this.current_nodes.size() == 0) {
 						print("Node: " + d.get(o.getId()) + " has schedule the first join");
 						//add the node in the current_nodes list
-						this.current_nodes.add(o);
+						if(!this.current_nodes.contains(o))
+							this.current_nodes.add(o);
 						//schedule the join of the node
 						schedule_action(o, "join", o, true, 1);
+						joined_nodes.add(o);
 					}else {
 						if(active_nodes.size() > 0) {
 							//there is enough space so i can add a node 
@@ -111,16 +121,20 @@ public class Super_node {
 							
 							//add the node to the current nodes in the network list
 							print("Node: " + d.get(o.getId()) + " has schedule a join");
-							this.current_nodes.add(o);
+							if(!this.current_nodes.contains(o))
+								this.current_nodes.add(o);
 							
 							//schedule the join of the node in the next tick
 							schedule_action(o, "join", target, false, 10);
+							joined_nodes.add(o);
 						}
 					}
+				} else {
+					print("REACHED MAX SIZE");
 				}
 			}
 		}
-		
+		nodes_to_join.removeAll(joined_nodes);
 		
 		/*
 		 * for every node in the network extract a value with the probability 
@@ -227,7 +241,11 @@ public class Super_node {
 			if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFingers", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-
+			}
+			//check predecessor procedure
+			if(tick_count % this.stabilize_tick*4 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
 			}
 		}
 		print("---Finish step---");
@@ -246,7 +264,14 @@ public class Super_node {
 		
 		if(!this.test) {
 			this.test = true;
-			
+			if (true) {
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				for (Node n : this.all_nodes) {
+					if (!n.equals(this.all_nodes.get(0))) {
+						schedule_action(n, "join", this.all_nodes.get(0), false, 5);
+					}
+				}
+			}
 			//simple join test where the nodes join in order (0->1->2-> .. ) and join to the same node (0)
 			if(false) {
 				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
@@ -264,6 +289,10 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 50);
 				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 50);
 				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 50);
+				//add test for the insertion of a key 
+				Key key_gen = new Key();
+				BigInteger new_key = key_gen.encryptThisString("Hello");
+				schedule_action(this.all_nodes.get(3), "insert", new_key, false, 55);
 			}
 			
 			//join test where the node join in different order (0->3->2->1->...) but to the same node (0)
@@ -283,6 +312,10 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 40);
 				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 40);
 				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 40);
+				
+				
+				
+				
 			}
 			
 			//join test where the node join not in order and more than one in the same tick but all to the same node (0)
@@ -488,7 +521,6 @@ public class Super_node {
 			if(tick_count % (this.stabilize_tick * 5)  == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
-
 			}
 			
 			//check predecessor procedure
@@ -832,7 +864,12 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
 				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
 				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 30);
-				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 40);
+				schedule_action(this.all_nodes.get(4), "join", this.all_nodes.get(0), false, 31);
+				schedule_action(this.all_nodes.get(5), "join", this.all_nodes.get(0), false, 32);
+				schedule_action(this.all_nodes.get(6), "join", this.all_nodes.get(0), false, 33);
+				schedule_action(this.all_nodes.get(7), "join", this.all_nodes.get(0), false, 34);
+				schedule_action(this.all_nodes.get(8), "join", this.all_nodes.get(0), false, 35);
+				schedule_action(this.all_nodes.get(9), "join", this.all_nodes.get(0), false, 36);
 				
 				//print status
 				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
@@ -842,7 +879,8 @@ public class Super_node {
 				Key k = new Key();
 				BigInteger key_one = k.encryptThisString("key_one");
 				BigInteger key_two = k.encryptThisString("key_two");
-				schedule_action(this.all_nodes.get(0), "insert", key_one, true, 150);
+				schedule_action(this.all_nodes.get(3), "insert", key_one, true, 50);
+				schedule_action(this.all_nodes.get(2), "insert", key_two, true, 51);
 				
 				//Schedule the key lookup
 				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 2000);

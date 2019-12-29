@@ -51,8 +51,13 @@ public class Network_Builder implements ContextBuilder<Object> {
 		
 		
 		NetworkBuilder<Object> netBuilder_messages = new NetworkBuilder<Object>(
-				"chord", context, true);
+				"insertNetwork", context, true);
 		netBuilder_messages.buildNetwork();
+		
+		//network to show the fingers 
+		NetworkBuilder<Object> fingersNetwork = new NetworkBuilder<Object>(
+				"fingersNetwork", context, true);
+		fingersNetwork.buildNetwork();
 		
 		
 		//continuous space declaration used to visualize the nodes
