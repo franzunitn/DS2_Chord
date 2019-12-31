@@ -692,23 +692,37 @@ public class Node{
 	}
 	
 	public void on_change_neigbour_leave(Change_neighbor_leave_message m) {
-		print("ON_CHANGE: Node: " + this.getSuperNodeNameForMe() + " has received a change message form: " +
-				m.source.getSuperNodeNameForMe(), logs_types.VERBOSE);
-		
-		if(m.is_predecessor_null) {
-			print("ON_CHANGE: " + "\t telling me that his predecessor is null so set mine to null", logs_types.VERBOSE);
-			this.predecessor = null;
-		}else {
+		if(this.state == Node_state.ACTIVE) {
+			print("ON_CHANGE: Node: " + this.getSuperNodeNameForMe() + " has received a change message form: " +
+					m.source.getSuperNodeNameForMe(), logs_types.VERBOSE);
+			
+			if(m.is_predecessor_null) {
+				print("ON_CHANGE: " + "\t telling me that his predecessor is null so set mine to null", logs_types.VERBOSE);
+				this.predecessor = null;
+			}else {
+				if(m.change_predecessor) {
+					print("ON_CHANGE: " + "\t telling me that his PREDECESSOR is: " +
+							m.new_predecessor.getSuperNodeNameForMe() + 
+							" so change mine", logs_types.VERBOSE);
+					this.predecessor = m.new_predecessor;
+				}else if(m.change_successor) {
+					print("ON_CHANGE: " + "\t telling me that his SUCCESSOR is: " +
+							m.new_successor.getSuperNodeNameForMe() + 
+							" so change mine", logs_types.VERBOSE);
+					this.successor = m.new_successor;
+				}
+			}
+		}else if (this.state == Node_state.INACTIVE) {
 			if(m.change_predecessor) {
-				print("ON_CHANGE: " + "\t telling me that his PREDECESSOR is: " +
-						m.new_predecessor.getSuperNodeNameForMe() + 
-						" so change mine", logs_types.VERBOSE);
-				this.predecessor = m.new_predecessor;
-			}else if(m.change_successor) {
-				print("ON_CHANGE: " + "\t telling me that his SUCCESSOR is: " +
-						m.new_successor.getSuperNodeNameForMe() + 
-						" so change mine", logs_types.VERBOSE);
-				this.successor = m.new_successor;
+				print("ON_CHANGE: " + "\t but i already fail so forward the message to: " +
+						this.successor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+				schedule_message(this.successor, "on_change_neigbour_leave", m, 1);
+			}else if (m.change_successor) {
+				if(this.predecessor != null) {
+					print("ON_CHANGE: " + "\t but i already fail so foreward the message to: " +
+							this.predecessor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+					schedule_message(this.predecessor, "on_change_neigbour_leave", m, 1);
+				}
 			}
 		}
 	}
