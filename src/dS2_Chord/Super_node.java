@@ -62,7 +62,7 @@ public class Super_node {
 	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
 	 * for example fixfinger and stabilize method are schedule inside here.
 	 */
-	//@ScheduledMethod (start = 1, interval = 1)
+	@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -246,6 +246,10 @@ public class Super_node {
 			if(tick_count % this.stabilize_tick*4 == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+			}
+			
+			if(tick_count % 10 == 0) {
+				schedule_action(o, "printActualState", o, false, 1);
 			}
 		}
 		print("---Finish step---");
