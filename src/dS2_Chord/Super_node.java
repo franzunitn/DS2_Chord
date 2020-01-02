@@ -62,7 +62,7 @@ public class Super_node {
 	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
 	 * for example fixfinger and stabilize method are schedule inside here.
 	 */
-	//@ScheduledMethod (start = 1, interval = 1)
+	@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -105,7 +105,7 @@ public class Super_node {
 				if(this.max_number_of_nodes > this.current_nodes.size()) {
 					//case if the ring is empty
 					if(this.current_nodes.size() == 0) {
-						print("Node: " + d.get(o.getId()) + " has schedule the first join");
+						//print("Node: " + d.get(o.getId()) + " has schedule the first join");
 						//add the node in the current_nodes list
 						if(!this.current_nodes.contains(o))
 							this.current_nodes.add(o);
@@ -120,7 +120,7 @@ public class Super_node {
 							Node target = active_nodes.get(random);
 							
 							//add the node to the current nodes in the network list
-							print("Node: " + d.get(o.getId()) + " has schedule a join");
+							//print("Node: " + d.get(o.getId()) + " has schedule a join");
 							if(!this.current_nodes.contains(o))
 								this.current_nodes.add(o);
 							
@@ -147,7 +147,7 @@ public class Super_node {
 			if(StdRandom.bernoulli(this.fail_prob)) {
 				//add the node to the going to fail list 
 				going_to_fail.add(o);
-				print("Node: " + d.get(o.getId()) + " has schedule a fail");
+				//print("Node: " + d.get(o.getId()) + " has schedule a fail");
 				//schedule the fail
 				schedule_action(o, "fail", "", false, 1);
 			}
@@ -164,7 +164,7 @@ public class Super_node {
 			if(StdRandom.bernoulli(this.leave_prob)) {
 				//add the node to the list going to leave
 				going_to_leave.add(o);
-				print("Node: " + d.get(o.getId()) + " has schedule a leave");
+				//print("Node: " + d.get(o.getId()) + " has schedule a leave");
 				//schedule the leave
 				schedule_action(o, "leave", "", false, 1);
 			}
@@ -189,7 +189,7 @@ public class Super_node {
 					int random_key = randomSource.nextInt(this.keys.size());
 					BigInteger key = this.keys.get(random_key);
 					
-					print("Node: " + d.get(target.getId()) + " chose to lookup key: " + k.get(key));
+					//print("Node: " + d.get(target.getId()) + " chose to lookup key: " + k.get(key));
 					
 					//schedule the lookup for the next tick
 					schedule_action(target, "lookup", key, false, 1);
@@ -210,7 +210,7 @@ public class Super_node {
 				Node target = this.current_nodes.get(random_node);
 				
 				//use the current time millis to generate a new key
-				BigInteger new_key = key_gen.encryptThisString(Long.toString(System.currentTimeMillis()));
+				BigInteger new_key = key_gen.encryptThisString(Integer.toString(randomSource.nextInt()));
 				
 				//add the new key to the map dictionary
 				this.k.put(new_key, this.k.size() + 1);
@@ -235,17 +235,17 @@ public class Super_node {
 			//check if it is the time to schedule a stabilize
 			if(tick_count % this.stabilize_tick == 0) {
 				schedule_action(o, "stabilize", a, false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
 			}
 			//check if is the time to schedule a fixFingers
 			if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFingers", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
 			}
 			//check predecessor procedure
 			if(tick_count % this.stabilize_tick*4 == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
-				print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
 			}
 		}
 		print("---Finish step---");
