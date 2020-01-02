@@ -87,7 +87,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.VERYVERBOSE;
+		this.log_level = logs_types.MINIMAL;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -123,7 +123,7 @@ public class Node{
 			print("Predecessor: NULL id: NULL", logs_types.MINIMAL);
 		}
 		print(this.fingertable.toString(), logs_types.MINIMAL);
-		String myKeys_str = "MyKeys: \n";
+		String myKeys_str = "MyKeys: (" + this.mykeys.size() + ")";
 		for (BigInteger big : this.mykeys) {
 			myKeys_str += "[key: " + big.toString() + "]\n";
 		}
@@ -1066,6 +1066,10 @@ public class Node{
 	private void print(String s, logs_types log) {
 		if(log.getValue() <= this.log_level.getValue())
 			print(s);
+	}
+	
+	public void print_key_size() {
+		print("SIZE: Node: " + this.getSuperNodeNameForMe() + " has: " + this.mykeys.size() + " key");
 	}
 	
 	public Boolean get_new_key_added () {

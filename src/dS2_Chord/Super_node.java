@@ -62,7 +62,7 @@ public class Super_node {
 	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
 	 * for example fixfinger and stabilize method are schedule inside here.
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -602,7 +602,7 @@ public class Super_node {
 	/**
 	 * test if keys are handled correctly
 	 */
-	//@ScheduledMethod (start = 1, interval = 1)
+	@ScheduledMethod (start = 1, interval = 1)
 	public void test_keys() {
 		Object a = new Object();
 		if(!this.test) {
@@ -680,6 +680,7 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "insert", key_one, true, 200);
 				schedule_action(this.all_nodes.get(1), "insert", key_two, true, 210);
 				schedule_action(this.all_nodes.get(1), "insert", key_three, true, 220);
+				
 				
 				//print status
 				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
@@ -885,6 +886,26 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(1), "lookup", key_two, true, 2100);
 			}
 			
+			if(true) {
+				int number_of_key = 100000;
+				
+				//schedule all the join
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
+				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 10);
+				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 20);
+				
+				Key k = new Key();
+				for(int i =0; i< number_of_key;i++){	
+					BigInteger rand_key = k.encryptThisString("key_one" + i);
+					schedule_action(this.all_nodes.get(2), "insert",rand_key, true, 50 +i);
+				}
+				
+				//print status
+				schedule_action(this.all_nodes.get(0), "print_key_size", a, false, number_of_key + 100);
+				schedule_action(this.all_nodes.get(1), "print_key_size", a, false, number_of_key + 100);
+				schedule_action(this.all_nodes.get(2), "print_key_size", a, false, number_of_key + 100);
+			}
+			
 		}
 		
 		
@@ -967,6 +988,9 @@ public class Super_node {
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, parameters);
 				break;
 			case "check_predecessor":
+				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+				break;
+			case "print_key_size":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			default : 
