@@ -1,5 +1,5 @@
 <repast.simphony.visualization.engine.CartesianDisplayDescriptor simphonyVersion="2.7.0">
-  <name>Chord</name>
+  <name>Keys</name>
   <type>2D</type>
   <styles>
     <entry>
@@ -15,29 +15,29 @@
   </editedStyles>
   <netStyles>
     <entry>
-      <string>joinNetwork</string>
-      <string>dS2_Chord.JoinNetworkStyle</string>
+      <string>insertNetwork</string>
+      <string>dS2_Chord.InsertNetworkStyle</string>
     </entry>
     <entry>
-      <string>notifyNetwork</string>
-      <string>dS2_Chord.NotifyNetworkStyle</string>
+      <string>keyFindedNetwork</string>
+      <string>dS2_Chord.KeyFindedNetworkStyle</string>
     </entry>
     <entry>
-      <string>stabilizeNetwork</string>
-      <string>dS2_Chord.StabilizeNetworkStyle</string>
+      <string>lookupNetwork</string>
+      <string>dS2_Chord.LookupNetworkStyle</string>
     </entry>
   </netStyles>
   <editedNetStyles>
     <entry>
-      <string>joinNetwork</string>
+      <string>insertNetwork</string>
       <null/>
     </entry>
     <entry>
-      <string>notifyNetwork</string>
+      <string>keyFindedNetwork</string>
       <null/>
     </entry>
     <entry>
-      <string>stabilizeNetwork</string>
+      <string>lookupNetwork</string>
       <null/>
     </entry>
   </editedNetStyles>
@@ -67,17 +67,17 @@
       <type>continuous space</type>
     </repast.simphony.scenario.data.ProjectionData>
     <repast.simphony.scenario.data.ProjectionData>
-      <id>joinNetwork</id>
+      <id>insertNetwork</id>
       <attributes/>
       <type>network</type>
     </repast.simphony.scenario.data.ProjectionData>
     <repast.simphony.scenario.data.ProjectionData>
-      <id>stabilizeNetwork</id>
+      <id>lookupNetwork</id>
       <attributes/>
       <type>network</type>
     </repast.simphony.scenario.data.ProjectionData>
     <repast.simphony.scenario.data.ProjectionData>
-      <id>notifyNetwork</id>
+      <id>keyFindedNetwork</id>
       <attributes/>
       <type>network</type>
     </repast.simphony.scenario.data.ProjectionData>
@@ -87,21 +87,21 @@
   </visualizationProperties>
   <projectionDescriptors>
     <entry>
-      <string>joinNetwork</string>
+      <string>insertNetwork</string>
       <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
         <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[2]"/>
         <props/>
       </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
     </entry>
     <entry>
-      <string>notifyNetwork</string>
+      <string>keyFindedNetwork</string>
       <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
         <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[4]"/>
         <props/>
       </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
     </entry>
     <entry>
-      <string>stabilizeNetwork</string>
+      <string>lookupNetwork</string>
       <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
         <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[3]"/>
         <props/>
