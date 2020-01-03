@@ -1,6 +1,7 @@
 package dS2_Chord;
 import dS2_Chord.Find_successor_message;
 import dS2_Chord.Find_predecessor_message;
+import dS2_Chord.Change_neighbor_leave_message;
 import dS2_Chord.Key;
 import dS2_Chord.Raw;
 import dS2_Chord.FingerTable;
@@ -40,7 +41,7 @@ public class Node{
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
 	private static enum logs_types {
-		MINIMAL(0), VERBOSE(1), VERYVERBOSE(2);
+		ZERO (0), MINIMAL(1), VERBOSE(2), VERYVERBOSE(3);
 		
 		private final int value;
 		private logs_types(int value) {
@@ -87,7 +88,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.VERYVERBOSE;
+		this.log_level = logs_types.ZERO;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -111,19 +112,19 @@ public class Node{
 	 */
 	public void printActualState() {
 		print("PRINTING STATE");
-		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.MINIMAL);
+		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.ZERO);
 		if (this.successor != null) {
-			print("Successor: " + this.successor.getSuperNodeNameForMe() + " id: " + this.successor.getId().toString(), logs_types.MINIMAL);
+			print("Successor: " + this.successor.getSuperNodeNameForMe() + " id: " + this.successor.getId().toString(), logs_types.ZERO);
 		} else {
-			print("Successor: NULL id: NULL", logs_types.MINIMAL);
+			print("Successor: NULL id: NULL", logs_types.ZERO);
 		}
 		if (this.predecessor != null) {
-			print("Predecessor: " + this.predecessor.getSuperNodeNameForMe() + " id: " + this.predecessor.getId().toString(), logs_types.MINIMAL);
+			print("Predecessor: " + this.predecessor.getSuperNodeNameForMe() + " id: " + this.predecessor.getId().toString(), logs_types.ZERO);
 		} else {
-			print("Predecessor: NULL id: NULL", logs_types.MINIMAL);
+			print("Predecessor: NULL id: NULL", logs_types.ZERO);
 		}
 		print(this.fingertable.toString(), logs_types.MINIMAL);
-		String myKeys_str = "MyKeys: \n";
+		String myKeys_str = "MyKeys: (" + this.mykeys.size() + ")";
 		for (BigInteger big : this.mykeys) {
 			myKeys_str += "[key: " + big.toString() + "]\n";
 		}
@@ -136,7 +137,7 @@ public class Node{
 	 * @param n a node already in the ring
 	 * */ 
 	public void join(Node n, boolean is_first) {
-		if(!(this.state == Node_state.FAILED)) {
+		if(this.state != Node_state.FAILED) {
 			//check if node n is still in the ring or has fail or leave
 			if(is_first) {
 				
@@ -157,7 +158,7 @@ public class Node{
 				Find_successor_message m = new Find_successor_message(this);
 				print("Node: " + snode.get_mapped_id(this.id) + " has asked to " + 
 				snode.get_mapped_id(n.getId()) + " to find his successor",
-						logs_types.VERYVERBOSE);
+						logs_types.VERBOSE);
 				
 				//schedule the receive of a message
 				schedule_message(n, "on_find_successor_receive", m, 1);
@@ -255,7 +256,7 @@ public class Node{
 	 */
 	public void on_find_predecessor_receive(Find_predecessor_message m) {
 		if(this.state == Node_state.ACTIVE) {
-			//reply with my predecessor (if not null)
+			//reply with my predecessor
 			Find_predecessor_reply rply;
 			if(this.predecessor != null) {
 				
@@ -286,14 +287,13 @@ public class Node{
 	 * A reply to a find predecessor request. 
 	 * if my successor has changed i set my successor predecessor
 	 * to my successor and than notify him.
-	 * @param x
+	 * @param x the reply message
 	 */
 	public void on_find_predecessor_reply(Find_predecessor_reply x) {
 		if(this.state == Node_state.ACTIVE) {
 			//if the predecessor of my successor is between me and my successor 
 			//i set my successor to him and than notify him.
-			if(!x.is_null) {
-																						
+			if(!x.is_null) {																	
 				if(check_interval(this.id, this.successor.getId(), x.n.getId(), false, false)) {
 					
 					print("Node: " + snode.get_mapped_id(this.id) + " has received a find predecessor REPLY from: " +
@@ -315,8 +315,7 @@ public class Node{
 						this.successor = x.n;
 					}
 				}
-			}
-			else {
+			}else {
 				
 				print("Node: " + snode.get_mapped_id(this.id) + " receive a find prdecessor REPLY from: " +
 				snode.get_mapped_id(x.source.getId()) + " telling me that his predecessor is NULL ",
@@ -565,10 +564,10 @@ public class Node{
 				//than schedule a message to that node if it responds the state will change 
 				//if not that means it is failed
 				Check_predecessor_message m = new Check_predecessor_message(this, this.predecessor, this.state.getValue());
-				schedule_message(this.predecessor,"on_check_predecessor_receive", m, 1);
+				schedule_message(this.predecessor, "on_check_predecessor_receive", m, 1);
 				
 				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
-				schedule_message(this, "timeout_predecessor_failed", m, 10);
+				schedule_message(this, "timeout_predecessor_failed", m,  4);
 			}else {
 				print("CHECK_PREDECESSOR: Node: " + this.getSuperNodeNameForMe() +
 						" has predecessor NULL", logs_types.VERYVERBOSE);
@@ -648,6 +647,41 @@ public class Node{
 				Transfer_message m = new Transfer_message(this, this.successor, this.mykeys);
 				//schedule the message
 				schedule_message(this.successor, "on_transfer_message", m, 1);
+				
+				//than schedule a message to my SUCCESSOR telling him to set his predecessor to my predecessor
+				Change_neighbor_leave_message cp;
+				if(this.predecessor != null) {
+					cp = new Change_neighbor_leave_message(this,
+																						this.successor, 
+																						this.predecessor, 
+																						true,
+																						false, 
+																						false);
+				}else {
+					//only tell my successor that i'm leaving and set his predecessor to null
+					cp = new Change_neighbor_leave_message(this, 
+																						this, 
+																						this, 
+																						true, 
+																						false, 
+																						true);
+				}
+				
+				schedule_message(this.successor, "on_change_neigbour_leave", cp, 1);
+				
+				//than schedule a message to my predecessor (if not null) telling him to set his successor to my successor
+				if(this.predecessor != null) {
+					Change_neighbor_leave_message cs = new Change_neighbor_leave_message(this,
+																						this.successor,
+																						this.predecessor, 
+																						false, 
+																						true, 
+																						false);
+					schedule_message(this.predecessor, "on_change_neigbour_leave", cs, 1);
+				}
+				
+				
+				
 				//than leave the network
 				this.state = Node_state.INACTIVE;
 			}
@@ -661,10 +695,56 @@ public class Node{
 					m.source.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
 			//acquire the keys
 			this.mykeys.addAll(m.keys);
-		}else {
-			//case where the node is inactive but can forward the message maybe
+		}else if(this.state == Node_state.INACTIVE) {
+			schedule_message(this.successor, "on_transfer_message", m, 1);
 		}
 	}
+	
+	public void on_change_neigbour_leave(Change_neighbor_leave_message m) {
+		print("ON_CHANGE: Node: " + this.getSuperNodeNameForMe() + " has received a change message form: " +
+				m.source.getSuperNodeNameForMe(), logs_types.VERBOSE);
+		if(this.state == Node_state.ACTIVE) {
+			if(m.is_predecessor_null) {
+				print("ON_CHANGE: " + "\t telling me that his predecessor is null so set mine to null", logs_types.VERBOSE);
+				this.predecessor = null;
+			}else {
+				if(m.change_predecessor) {
+					print("ON_CHANGE: " + "\t telling me that his PREDECESSOR is: " +
+							m.new_predecessor.getSuperNodeNameForMe() + 
+							" so change mine", logs_types.VERBOSE);
+					this.predecessor = m.new_predecessor;
+				}else if(m.change_successor) {
+					print("ON_CHANGE: " + "\t telling me that his SUCCESSOR is: " +
+							m.new_successor.getSuperNodeNameForMe() + 
+							" so change mine", logs_types.VERBOSE);
+					this.successor = m.new_successor;
+				}
+			}
+		}else if(this.state == Node_state.INACTIVE) {
+			//case when i have to forward the message
+			if(m.change_predecessor) {
+				//forward to my successor
+				print("ON_CHANGE: " + "\t i'm INACTIVE so foreward to my successor: " +
+						this.successor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+				//send to my successor
+				schedule_message(this.successor, "on_change_neigbour_leave", m, 1);
+			}else if(m.change_successor) {
+				//if my predecessor is not null
+				if(this.predecessor != null) {
+					//forward to my predecessor
+					print("ON_CHANGE: " + "\t i'm INACTIVE so foreward to my predecessor: " +
+							this.predecessor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+					//send to my predecessor
+					schedule_message(this.predecessor, "on_change_neigbour_leave", m, 1);
+				}else {
+					//case when my predecessor is null so i can't foreward the message
+					print("ON_CHANGE: " + "\t i'm INACTIVE and my predecessor is NULL so i can't forward " +
+							this.predecessor.getSuperNodeNameForMe(), logs_types.VERBOSE);
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Method used to simulate a node failure
 	 */
@@ -1019,6 +1099,14 @@ public class Node{
 	private void print(String s, logs_types log) {
 		if(log.getValue() <= this.log_level.getValue())
 			print(s);
+	}
+	
+	public void print_key_size() {
+		print("SIZE: Node: " + this.getSuperNodeNameForMe() + " has: " + this.mykeys.size() + " key");
+	}
+	
+	public int get_keys_size() {
+		return this.mykeys.size();
 	}
 	
 	public Boolean get_new_key_added () {

@@ -54,6 +54,13 @@
 						converter="repast.simphony.parameter.StringConverterFactory$FloatConverter"
 									
 		/>
+		
+				<parameter name="max_number_of_keys" displayName="max num of keys" type="int" 
+						defaultValue="100000" 
+						isReadOnly="false" 
+						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
+									
+		/>
 		</parameters>
 
 
