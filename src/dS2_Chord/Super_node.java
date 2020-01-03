@@ -941,7 +941,7 @@ public class Super_node {
 	/**
 	 * test the networks graphic 
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_networks() {
 		Object a = new Object();
 		Random randomSource = new Random();
@@ -1098,9 +1098,11 @@ public class Super_node {
 				while(keys < this.max_number_of_keys) {
 					BigInteger random_key = key_generator.encryptThisString("" + keys);
 					this.keys.add(random_key);
-					Node random_node = this.all_nodes.get(rand_generator.nextInt(active_nodes.size()));
-					schedule_action(random_node, "insert", random_key, false, rand_generator.nextInt(100));
-					keys++;
+					if(!this.keys.contains(random_key)) {
+						Node random_node = this.all_nodes.get(rand_generator.nextInt(active_nodes.size()));
+						schedule_action(random_node, "insert", random_key, false, rand_generator.nextInt(100));
+						keys++;
+					}
 				}
 				RunEnvironment.getInstance().endAt(tick_count + 200);
 			}else {

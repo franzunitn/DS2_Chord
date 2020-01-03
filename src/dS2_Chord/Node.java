@@ -66,6 +66,7 @@ public class Node{
 	
 	private logs_types log_level;
 	private int next;
+	private int check_predecessor_counter;
 	private boolean predecessor_has_reply;
 
 	private Node_state state;
@@ -89,6 +90,7 @@ public class Node{
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
 		this.log_level = logs_types.ZERO;
+		this.check_predecessor_counter = 0;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -563,7 +565,12 @@ public class Node{
 				this.predecessor_has_reply = false;
 				//than schedule a message to that node if it responds the state will change 
 				//if not that means it is failed
-				Check_predecessor_message m = new Check_predecessor_message(this, this.predecessor, this.state.getValue());
+				//increment the check predecessor counter
+				this.check_predecessor_counter++;
+				Check_predecessor_message m = new Check_predecessor_message(this, 
+																			this.predecessor, 
+																			this.state.getValue(), 
+																			this.check_predecessor_counter);
 				schedule_message(this.predecessor, "on_check_predecessor_receive", m, 1);
 				
 				//also schedule to myself a timeout in order to set the node to failed if i don't receive a reply
@@ -588,7 +595,7 @@ public class Node{
 					"\n and schedule a reply", logs_types.VERBOSE);
 			
 			//construct a message with my current state in the reply
-			Check_predecessor_message reply = new Check_predecessor_message(this, m.source, this.state.getValue());
+			Check_predecessor_message reply = new Check_predecessor_message(this, m.source, this.state.getValue(), 0);
 			//schedule the reply to the source of the request
 			schedule_message(m.source, "on_check_predecessor_reply", reply, 1);
 		}
@@ -616,11 +623,16 @@ public class Node{
 	 */
 	public void timeout_predecessor_failed(Check_predecessor_message m) {
 		if(this.state == Node_state.ACTIVE) {
-			if(!this.predecessor_has_reply) {
-				//my predecessor has not reply in 10 tick so i can consider him dead
-				this.predecessor = null;
+			//check the counter of the timeout in order to avoid
+			//the overlapping of the timeout with the reply message
+			if(m.check_predecessor_counter == this.check_predecessor_counter) {
+				//case when the predecessor hasn't reply
+				if(!this.predecessor_has_reply) {
+					this.predecessor = null;
+				}
+			}else {
+				//case when the is another check predecessor going on the previous timeout is discard
 			}
-			//after that it will be fixed by stabilize
 		}
 	}
 	
