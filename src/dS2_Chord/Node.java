@@ -74,6 +74,7 @@ public class Node{
 	public Super_node snode;
 	
 	private boolean new_key_added = false;
+	private boolean key_finded = false;
 	
 	//Node Constructor
 	public Node(BigInteger id) {
@@ -160,6 +161,9 @@ public class Node{
 				
 				//schedule the receive of a message
 				schedule_message(n, "on_find_successor_receive", m, 1);
+				
+				//add edge of the join network 
+				addEdge("joinNetwork", this, m.source);
 			}	
 		}
 	}
@@ -188,6 +192,7 @@ public class Node{
 						" so reply to him with " + snode.get_mapped_id(closest.getId()), logs_types.VERYVERBOSE);
 				
 				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
+				addEdge("joinNetwork", this, m.source);
 				return;
 			}
 			
@@ -196,6 +201,7 @@ public class Node{
 			
 			//forward message to closest preceding node by schedule a message Find_successor_message
 			schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
+			addEdge("joinNetwork", this, closest_preceding_node(target_id));
 		}
 	}
 	
@@ -238,6 +244,7 @@ public class Node{
 				
 			//schedule the arrival of the message in my successor node
 			schedule_message(this.successor, "on_find_predecessor_receive", m, 1);
+			addEdge("stabilizeNetwork", this, this.successor);
 		}
 	}
 	
@@ -271,6 +278,7 @@ public class Node{
 			
 			
 			schedule_message(m.source, "on_find_predecessor_reply", rply, 1);
+			addEdge("stabilizeNetwork", this, m.source);
 		}
 	}
 		
@@ -324,6 +332,7 @@ public class Node{
 								logs_types.VERYVERBOSE);
 				
 				schedule_message(this.successor, "notification", this, 1);
+				addEdge("notifyNetwork", this, this.successor);
 			}
 		}
 	}
@@ -679,6 +688,8 @@ public class Node{
 			if (this.predecessor != null && check_interval(this.predecessor.getId(), this.getId(), key, false, false)) {
 				// Check if I know the key
 				if (check_element(key) != null) {
+					this.key_finded = true;
+					schedule_message(this, "remove_yellow", null, 3);
 					//Print a message for the object if it's found
 					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + ", Object [" + key + "] FOUND", logs_types.MINIMAL);
 					return;
@@ -700,6 +711,8 @@ public class Node{
 						+ ", I send a look up message to node " + target.getSuperNodeNameForMe()
 						+ " to look for the key requested", logs_types.VERBOSE);
 				schedule_message(target, "on_look_up_message_receive", lum, 1);
+				//add the edge for the lookup message
+				addEdge("lookupNetwork", this, target);
 			}
 			//My successor is not the right node that will handle the key
 			else {
@@ -716,6 +729,8 @@ public class Node{
 					+ " to handle the key requested", logs_types.VERBOSE);
 				//Send the message
 				schedule_message(closest, "on_look_up_message_receive", lum, 1);
+				//add the edge for the lookup message
+				addEdge("lookupNetwork", this, closest);
 			}
 		}
 		else {
@@ -735,11 +750,15 @@ public class Node{
 				print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
 						+ " the key we are looking for is in my interval", logs_types.VERYVERBOSE);
 				if (check_element(m.key) != null) {
+					this.key_finded = true;
+					schedule_message(this, "remove_yellow", null, 3);
 					print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
 						+ " I have the key we are looking for, I send a message to the source ("
 						+ m.source.getSuperNodeNameForMe() + ") to comuncate the positeve handling", logs_types.VERBOSE);
 					look_up_reply_message lurm = new look_up_reply_message(this, true);
 					schedule_message(m.source, "on_look_up_reply_message_receive", lurm, 1);
+					//messagge to the source i find the key
+					addEdge("keyFindedNetwork", this, m.source);
 					return;
 				} else {
 					print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
@@ -747,6 +766,8 @@ public class Node{
 						+ m.source.getSuperNodeNameForMe() + ") to comuncate the negative handling", logs_types.VERBOSE);
 					look_up_reply_message lurm = new look_up_reply_message(this, false);
 					schedule_message(m.source, "on_look_up_reply_message_receive", lurm, 1);
+					//message to the source i don't find the key 
+					//addEdge("lookupNetwork", this, m.source);
 					return;
 				}
 			}
@@ -759,6 +780,8 @@ public class Node{
 					+ ", I send a look up message to node " + target.getSuperNodeNameForMe()
 					+ " to look for the key requested", logs_types.VERBOSE);
 				schedule_message(target, "on_look_up_message_receive", m, 1);
+				//add an edge for the lookup message 
+				addEdge("lookupNetwork", this, target);
 			}
 			else {
 				Node closest = closest_preceding_node(m.key);
@@ -773,6 +796,9 @@ public class Node{
 					+ ", I send a look up message to node " + closest.getSuperNodeNameForMe()
 					+ " to handle the key requested", logs_types.VERBOSE);
 				schedule_message(closest, "on_look_up_message_receive", m, 1);
+				//add an edge for the lookup message 
+				addEdge("lookupNetwork", this, closest);
+				
 			}
 		}
 	}
@@ -818,7 +844,7 @@ public class Node{
 					this.mykeys.add(new_key);
 					//become green for 10 ticks 
 					this.new_key_added = true;
-					schedule_message(this, "remove_graphic", null, 3);
+					schedule_message(this, "remove_green", null, 3);
 					return;
 				} else {
 					print("INSERT, Node: " + this.getSuperNodeNameForMe() 
@@ -866,7 +892,7 @@ public class Node{
 							+ ", Key added to the keys controlled by this node", logs_types.MINIMAL);
 					this.mykeys.add(new_key);
 					this.new_key_added = true;
-					schedule_message(this, "remove_graphic", null, 3);
+					schedule_message(this, "remove_green", null, 3);
 				} else {
 					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() 
 						+ ", ERROR, key already in the key list", logs_types.MINIMAL);
@@ -902,10 +928,17 @@ public class Node{
 		}
 	}
 	
+	
 	//used to become again blue after recive a new key 
-		public void remove_graphic () {
+		public void remove_green () {
 			this.new_key_added = false;
 		}
+		
+	//used to become again blue after find a key 
+			public void remove_yellow () {
+				this.key_finded = false;
+			}
+		
 	
 	/**
 	 * This method is used to check if a target id is in the interval between [start, finish]
@@ -992,6 +1025,10 @@ public class Node{
 		return this.new_key_added;
 	}
 	
+	public Boolean get_key_finded () {
+		return this.key_finded;
+	}
+	
 	//update the graphic of the fingers have to be called on each modification of the fingertable 
 		private void update_fingers_graphic () {
 			ArrayList<Node> myfingers = this.fingertable.getAllSucc();
@@ -1018,7 +1055,7 @@ public class Node{
 			Context <Object> context = ContextUtils.getContext(this);
 			Network<Object> network = (Network<Object>)context.getProjection(network_name);
 			network.addEdge(source, target);
-			schedule_message(source, "removeEdge", "insertNetwork", 1);
+			schedule_message(source, "removeEdge", network_name, 1);
 		}
 		
 		//remove all exit edges from this node

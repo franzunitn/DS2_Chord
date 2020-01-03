@@ -50,9 +50,31 @@ public class Network_Builder implements ContextBuilder<Object> {
 		//network for lookup
 		
 		
-		NetworkBuilder<Object> netBuilder_messages = new NetworkBuilder<Object>(
+		NetworkBuilder<Object> netBuilder_insert = new NetworkBuilder<Object>(
 				"insertNetwork", context, true);
-		netBuilder_messages.buildNetwork();
+		netBuilder_insert.buildNetwork();
+		
+		NetworkBuilder<Object> netBuilder_lookup = new NetworkBuilder<Object>(
+				"lookupNetwork", context, true);
+		netBuilder_lookup.buildNetwork();
+		
+		NetworkBuilder<Object> netBuilder_key_finded = new NetworkBuilder<Object>(
+				"keyFindedNetwork", context, true);
+		netBuilder_key_finded.buildNetwork();
+		
+		NetworkBuilder<Object> netBuilder_key_join = new NetworkBuilder<Object>(
+				"joinNetwork", context, true);
+		netBuilder_key_join.buildNetwork();
+		
+		NetworkBuilder<Object> netBuilder_stabilize = new NetworkBuilder<Object>(
+				"stabilizeNetwork", context, true);
+		netBuilder_stabilize.buildNetwork();
+		
+		NetworkBuilder<Object> netBuilder_notify = new NetworkBuilder<Object>(
+				"notifyNetwork", context, true);
+		netBuilder_notify.buildNetwork();
+		
+		
 		
 		//network to show the fingers 
 		NetworkBuilder<Object> fingersNetwork = new NetworkBuilder<Object>(

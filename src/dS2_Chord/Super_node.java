@@ -559,7 +559,7 @@ public class Super_node {
 	/**
 	 * test if keys are handled correctly
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_keys() {
 		Object a = new Object();
 		if(!this.test) {
@@ -838,8 +838,8 @@ public class Super_node {
 				schedule_action(this.all_nodes.get(2), "insert", key_two, true, 51);
 				
 				//Schedule the key lookup
-				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 2000);
-				schedule_action(this.all_nodes.get(1), "lookup", key_two, true, 2100);
+				schedule_action(this.all_nodes.get(1), "lookup", key_one, true, 60);
+				schedule_action(this.all_nodes.get(1), "lookup", key_two, true, 65);
 			}
 			
 		}
@@ -881,6 +881,110 @@ public class Super_node {
 		
 		print("CURRENT ACTIVE NODES: " + active_nodes.size());
 	}
+	
+	
+	
+	
+	/**
+	 * test the networks graphic 
+	 */
+	@ScheduledMethod (start = 1, interval = 1)
+	public void test_networks() {
+		Object a = new Object();
+		Random randomSource = new Random();
+	
+		if(!this.test) {
+			this.test = true;
+			//test graphic 
+			if(true) {
+				//all nodes join the network 
+				//first special case 
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 2);
+				int tick = 3;
+				
+				//all others
+				for (int i = 1; i < this.all_nodes.size(); i++) {
+					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, tick);
+					tick = tick + 3;
+				}
+				//wait some time before the insertion of keys 
+				tick = tick + 15;
+				
+				//Schedule the key insertion of 5 keys by random nodes in the netrowk
+				final int NUMBER_OF_INSERION = 5;
+				Key k = new Key();
+				ArrayList<BigInteger> inserted_keys = new ArrayList<BigInteger>();
+				for (int j = 0; j < NUMBER_OF_INSERION; j++) {
+					//random for the keys
+					int random = randomSource.nextInt(100);
+					//random for choose a random node 
+					int random2 = randomSource.nextInt(this.all_nodes.size());
+					//creation of the key 
+					BigInteger key = k.encryptThisString("key_" + random);
+					//schedule the insertion of the key 
+					schedule_action(this.all_nodes.get(random2), "insert", key, true, tick);
+					//add the key to a list for schedule lookups later 
+					inserted_keys.add(key);
+					//insertion every 3 ticks 
+					tick = tick + 3;
+				}
+				
+				
+				//wait some time before try to lookup the inserted keys 
+				tick = tick +15;
+				//lookups for all the keys that were inserted before 
+				for (BigInteger key : inserted_keys) {
+					//choose a random node to lookup for a key 
+					int random = randomSource.nextInt(this.all_nodes.size());
+					schedule_action(this.all_nodes.get(random), "lookup", key, true, tick);
+					tick = tick + 3;
+				}
+				
+			}
+			
+		}
+		
+		
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
+			}
+			
+			//check predecessor procedure
+			if(tick_count % 20 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+
+			}
+		}
+		
+		print("CURRENT ACTIVE NODES: " + active_nodes.size());
+	}
+	
+	
+	
+	
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
 		//schedule receive of a fins successor message in the next tick

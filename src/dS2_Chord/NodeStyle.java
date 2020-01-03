@@ -14,6 +14,10 @@ public class NodeStyle extends DefaultStyleOGL2D {
 		if(ag.get_new_key_added()) {
 			return Color.green;
 		}
+		//has find the key in the lookup 
+		if (ag.get_key_finded()) {
+			return Color.yellow;
+		}
 		//active 
 		if(state == 0) {
 			return Color.blue;
