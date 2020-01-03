@@ -92,7 +92,7 @@ public class Network_Builder implements ContextBuilder<Object> {
 		int stabilize_tick = (Integer) params.getValue("stabilize_tick");		//how many tick to wait before stabilize
 		int fixfinger_tick = (Integer) params.getValue("fixfinger_tick");		//how many tick to wait before fixfinger
 		
-		
+		int max_number_of_keys = (Integer) params.getValue("max_number_of_keys");
 		//create a key instance to encrypt the id of the node
 		Key k = new Key();
 		//list of nodes to pass to the super_node constructor
@@ -179,7 +179,8 @@ public class Network_Builder implements ContextBuilder<Object> {
 									current_nodes,  
 									stabilize_tick, 
 									fixfinger_tick,
-									d);
+									d, 
+									max_number_of_keys);
 		
 		context.add(s);
 		

@@ -41,7 +41,7 @@ public class Node{
 	private boolean is_join;
 	private static final BigInteger MAX_VALUE = BigInteger.ZERO.setBit(Node.bigIntegerBits).subtract(BigInteger.ONE);
 	private static enum logs_types {
-		MINIMAL(0), VERBOSE(1), VERYVERBOSE(2);
+		ZERO (0), MINIMAL(1), VERBOSE(2), VERYVERBOSE(3);
 		
 		private final int value;
 		private logs_types(int value) {
@@ -87,7 +87,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.MINIMAL;
+		this.log_level = logs_types.ZERO;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -111,16 +111,16 @@ public class Node{
 	 */
 	public void printActualState() {
 		print("PRINTING STATE");
-		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.MINIMAL);
+		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.ZERO);
 		if (this.successor != null) {
-			print("Successor: " + this.successor.getSuperNodeNameForMe() + " id: " + this.successor.getId().toString(), logs_types.MINIMAL);
+			print("Successor: " + this.successor.getSuperNodeNameForMe() + " id: " + this.successor.getId().toString(), logs_types.ZERO);
 		} else {
-			print("Successor: NULL id: NULL", logs_types.MINIMAL);
+			print("Successor: NULL id: NULL", logs_types.ZERO);
 		}
 		if (this.predecessor != null) {
-			print("Predecessor: " + this.predecessor.getSuperNodeNameForMe() + " id: " + this.predecessor.getId().toString(), logs_types.MINIMAL);
+			print("Predecessor: " + this.predecessor.getSuperNodeNameForMe() + " id: " + this.predecessor.getId().toString(), logs_types.ZERO);
 		} else {
-			print("Predecessor: NULL id: NULL", logs_types.MINIMAL);
+			print("Predecessor: NULL id: NULL", logs_types.ZERO);
 		}
 		print(this.fingertable.toString(), logs_types.MINIMAL);
 		String myKeys_str = "MyKeys: (" + this.mykeys.size() + ")";
@@ -1070,6 +1070,10 @@ public class Node{
 	
 	public void print_key_size() {
 		print("SIZE: Node: " + this.getSuperNodeNameForMe() + " has: " + this.mykeys.size() + " key");
+	}
+	
+	public int get_keys_size() {
+		return this.mykeys.size();
 	}
 	
 	public Boolean get_new_key_added () {

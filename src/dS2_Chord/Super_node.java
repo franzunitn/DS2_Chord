@@ -40,10 +40,16 @@ public class Super_node {
 	private Dictionary<BigInteger, Integer> d;
 	
 	private boolean test = false;
+	
+	private boolean insert_done = false;
+	
+	private int max_number_of_keys;
+	private int stable_counter;
+	private boolean stable;
 
 	public Super_node(float join_prob, float leave_prob, float fail_prob, float lookup_prob, int new_keys,
 			int max_number_of_nodes, ArrayList<Node> current_nodes,  int stabilize_tick, int fix_finger_tick,
-			Dictionary<BigInteger, Integer> d) {
+			Dictionary<BigInteger, Integer> d, int max_number_of_keys) {
 		this.join_prob = join_prob;
 		this.leave_prob = leave_prob;
 		this.fail_prob = fail_prob;
@@ -56,13 +62,16 @@ public class Super_node {
 		this.d = d;
 		this.k = new Hashtable();
 		this.test = false;
+		this.max_number_of_keys = max_number_of_keys;
+		this.stable_counter = 0;
+		this.stable = false;
 	}
 
 	/**
 	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
 	 * for example fixfinger and stabilize method are schedule inside here.
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -602,7 +611,7 @@ public class Super_node {
 	/**
 	 * test if keys are handled correctly
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_keys() {
 		Object a = new Object();
 		if(!this.test) {
@@ -944,6 +953,94 @@ public class Super_node {
 		}
 		
 		print("CURRENT ACTIVE NODES: " + active_nodes.size());
+	}
+	
+	
+	@ScheduledMethod(start = 1, interval = 1)
+	public void num_key_per_node_test() {
+		
+		
+		
+		if(!this.test) {
+			this.test = true;
+			
+			//first of all schedule the join of the nodes and reach a stable state
+			for(int i = 0; i < this.max_number_of_nodes; i++) {
+				if(i == 0) {
+					schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 1);
+				}else {
+					
+					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, i + 3);
+				}
+			}
+		}
+		
+		Random rand_generator = new Random();
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		Object a = new Object();
+		
+		if(active_nodes.size() == this.max_number_of_nodes && !insert_done) {
+			if(this.stable) {
+				print(" ----------Entered the insert procedure----------- ");
+				insert_done = true;
+				int keys = 0;
+				Key key_generator = new Key();
+				
+				while(keys < this.max_number_of_keys) {
+					BigInteger random_key = key_generator.encryptThisString("" + keys);
+					this.keys.add(random_key);
+					Node random_node = this.all_nodes.get(rand_generator.nextInt(active_nodes.size()));
+					schedule_action(random_node, "insert", random_key, false, rand_generator.nextInt(100));
+					keys++;
+				}
+				RunEnvironment.getInstance().endAt(tick_count + 200);
+			}else {
+				print("" + this.stable_counter);
+				this.stable_counter++;
+				if(this.stable_counter >= 350) {
+					this.stable = true;
+				}
+			}
+		}
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+
+			}
+			
+			//check predecessor procedure
+			if(tick_count % this.stabilize_tick * 4 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+
+			}
+		}
+		
+		if(tick_count % 50 == 0) {
+			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 1);
+		}
+		
+		
+		print("ACTIVE NODES: " + active_nodes.size());
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
