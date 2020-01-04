@@ -88,7 +88,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.ZERO;
+		this.log_level = logs_types.MINIMAL;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -126,9 +126,9 @@ public class Node{
 		print(this.fingertable.toString(), logs_types.MINIMAL);
 		String myKeys_str = "MyKeys: (" + this.mykeys.size() + ")";
 		for (BigInteger big : this.mykeys) {
-			myKeys_str += "[key: " + big.toString() + "]\n";
+			print("[key: " + big.toString() + "]", logs_types.MINIMAL);
 		}
-		print(myKeys_str, logs_types.MINIMAL);
+		print("Max_BigIntegerValue: " + MAX_VALUE.toString() + "!", logs_types.MINIMAL);
 	}
 	
 	/*
