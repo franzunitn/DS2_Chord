@@ -381,6 +381,7 @@ public class Node{
 			this.next = this.next + 1;
 			
 			if(next == Node.bigIntegerBits){
+				print("FIXFINGER: Node: " + this.getSuperNodeNameForMe() + " NEXT RESETTED", logs_types.MINIMAL);
 				this.next = 1; 
 			}
 			
@@ -393,7 +394,7 @@ public class Node{
 			
 			//case that the successor of index is my successor
 			if(n != null) {
-				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + " the successor of indx is my successor", logs_types.VERBOSE);
+				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + " the successor of indx is my successor " + this.successor.getSuperNodeNameForMe(), logs_types.MINIMAL);
 				this.fingertable.setNewNode(this.next, n);
 				update_fingers_graphic();
 			}else {
@@ -406,7 +407,7 @@ public class Node{
 				
 				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + 
 						" send a message to the node: " + 
-						snode.get_mapped_id(target.getId()), logs_types.VERBOSE);
+						snode.get_mapped_id(target.getId()), logs_types.MINIMAL);
 				
 				schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
 
@@ -466,7 +467,7 @@ public class Node{
 		//found the successor and than update the finger table
 		print("Node: " + snode.get_mapped_id(this.id) + " receive the successor for the fingertable index : " +
 				m.next + " whith successor: " +
-				snode.get_mapped_id(m.source.getId()), logs_types.VERBOSE);
+				snode.get_mapped_id(m.source.getId()), logs_types.MINIMAL);
 		
 		//update the row 
 		this.fingertable.setNewNode(m.next, m.source);
