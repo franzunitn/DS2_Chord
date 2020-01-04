@@ -46,6 +46,7 @@ public class Super_node {
 	private int max_number_of_keys;
 	private int stable_counter;
 	private boolean stable;
+	private int finish;
 
 	public Super_node(float join_prob, float leave_prob, float fail_prob, float lookup_prob, int new_keys,
 			int max_number_of_nodes, ArrayList<Node> current_nodes,  int stabilize_tick, int fix_finger_tick,
@@ -65,6 +66,7 @@ public class Super_node {
 		this.max_number_of_keys = max_number_of_keys;
 		this.stable_counter = 0;
 		this.stable = false;
+		this.finish = 0;
 	}
 
 	/**
@@ -1058,9 +1060,6 @@ public class Super_node {
 	
 	@ScheduledMethod(start = 1, interval = 1)
 	public void num_key_per_node_test() {
-		
-		
-		
 		if(!this.test) {
 			this.test = true;
 			
@@ -1088,6 +1087,8 @@ public class Super_node {
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		Object a = new Object();
 		
+		//schedule_action(this.all_nodes.get(1), "printActualState", a, false, 0);
+		//schedule_action(this.all_nodes.get(0), "printActualState", a, false, 0);
 		if(active_nodes.size() == this.max_number_of_nodes && !insert_done) {
 			if(this.stable) {
 				print(" ----------Entered the insert procedure----------- ");
@@ -1096,21 +1097,31 @@ public class Super_node {
 				Key key_generator = new Key();
 				
 				while(keys < this.max_number_of_keys) {
-					BigInteger random_key = key_generator.encryptThisString("" + keys);
-					this.keys.add(random_key);
+					BigInteger random_key = key_generator.encryptThisString("" + keys + rand_generator.nextInt());
 					if(!this.keys.contains(random_key)) {
+						this.keys.add(random_key);
 						Node random_node = this.all_nodes.get(rand_generator.nextInt(active_nodes.size()));
 						schedule_action(random_node, "insert", random_key, false, rand_generator.nextInt(100));
 						keys++;
+						if(keys % 1000 == 0) {
+							print("scheduled: " + keys/1000 + "/" + this.max_number_of_keys/1000 + "K");
+						}
 					}
 				}
-				RunEnvironment.getInstance().endAt(tick_count + 200);
+				print(" ----------Exit the insert procedure----------- ");
+				this.finish = tick_count + 300;
+				RunEnvironment.getInstance().endAt(this.finish);
 			}else {
-				print("" + this.stable_counter);
+				print("waiting: " + this.stable_counter + "/3000");
 				this.stable_counter++;
-				if(this.stable_counter >= 350) {
+				if(this.stable_counter >= 3000) {
 					this.stable = true;
 				}
+				
+			}
+		}else {
+			if(active_nodes.size() == this.max_number_of_nodes) {
+				print("Mancano: " + (this.finish - tick_count) + " Tick");
 			}
 		}
 		
@@ -1138,11 +1149,18 @@ public class Super_node {
 		}
 		
 		if(tick_count % 50 == 0) {
-			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 1);
+			schedule_action(this.all_nodes.get(0), "printActualStateMinimal", a, false, 1);
 		}
 		
+		if(active_nodes.size() < this.max_number_of_nodes) {
+			print("ACTIVE NODES: " + active_nodes.size());
+		}
 		
-		print("ACTIVE NODES: " + active_nodes.size());
+		if(tick_count % 2999 == 0) {
+			for(Node n : active_nodes) {
+				schedule_action(n, "printActualState", a, false, 1);
+			}
+		}
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
@@ -1189,7 +1207,7 @@ public class Super_node {
 			case "check_predecessor":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
-			case "print_key_size":
+			case "check_finger_table":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
 			default : 

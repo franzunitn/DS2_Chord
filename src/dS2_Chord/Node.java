@@ -98,7 +98,15 @@ public class Node{
 	}
 	
 	public void printActualStateMinimal() {
-		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.MINIMAL);
+		print("Node: " + getSuperNodeNameForMe() +
+				" id: " + this.id.toString() + "\n" +
+				"Successor: " + this.successor.getSuperNodeNameForMe()
+				, logs_types.ZERO);
+		if(this.predecessor == null) {
+			print("Predecessor: NULL", logs_types.ZERO);
+		}else {
+			print("Predecessor: " + this.predecessor.getSuperNodeNameForMe(), logs_types.ZERO);
+		}
 	}
 	
 	private void changeActualLogLevel(logs_types logLevel) {
@@ -113,7 +121,7 @@ public class Node{
 	 * Method used to print the node state
 	 */
 	public void printActualState() {
-		print("PRINTING STATE");
+		print("PRINTING STATE", logs_types.ZERO);
 		print("Node: " + getSuperNodeNameForMe() + " id: " + this.id.toString(), logs_types.ZERO);
 		if (this.successor != null) {
 			print("Successor: " + this.successor.getSuperNodeNameForMe() + " id: " + this.successor.getId().toString(), logs_types.ZERO);
@@ -125,12 +133,12 @@ public class Node{
 		} else {
 			print("Predecessor: NULL id: NULL", logs_types.ZERO);
 		}
-		print(this.fingertable.toString(), logs_types.MINIMAL);
+		print(this.fingertable.toString(), logs_types.ZERO);
 		String myKeys_str = "MyKeys: (" + this.mykeys.size() + ")";
 		for (BigInteger big : this.mykeys) {
 			myKeys_str += "[key: " + big.toString() + "]\n";
 		}
-		print(myKeys_str, logs_types.MINIMAL);
+		print(myKeys_str, logs_types.ZERO);
 	}
 	
 	/*
@@ -158,8 +166,8 @@ public class Node{
 				this.predecessor = null;
 				//send join message
 				Find_successor_message m = new Find_successor_message(this);
-				print("Node: " + snode.get_mapped_id(this.id) + " has asked to " + 
-				snode.get_mapped_id(n.getId()) + " to find his successor",
+				print("Node: " + this.getSuperNodeNameForMe() + " has asked to " + 
+				n.getSuperNodeNameForMe() + " to find his successor",
 						logs_types.VERBOSE);
 				
 				//schedule the receive of a message
@@ -180,8 +188,8 @@ public class Node{
 	 */
 	public void on_find_successor_receive(Find_successor_message m) {
 		if(this.state == Node_state.ACTIVE) {
-			print("Node: " + snode.get_mapped_id(this.id) + " has received a request of join from: " + 
-					snode.get_mapped_id(m.source.getId()),
+			print("Node: " + this.getSuperNodeNameForMe() + " has received a request of join from: " + 
+					m.source.getSuperNodeNameForMe(),
 					logs_types.VERBOSE);
 
 			BigInteger target_id = m.source.getId();
@@ -190,17 +198,17 @@ public class Node{
 			
 			if (closest != null) {
 				
-				print("Node: " + snode.get_mapped_id(this.id) + " know the successor of   " + 
-						snode.get_mapped_id(m.source.getId()) +
-						" so reply to him with " + snode.get_mapped_id(closest.getId()), logs_types.VERYVERBOSE);
+				print("Node: " + this.getSuperNodeNameForMe() + " know the successor of   " + 
+						m.source.getSuperNodeNameForMe() +
+						" so reply to him with " + closest.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
 				
 				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
 				addEdge("joinNetwork", this, m.source);
 				return;
 			}
 			
-			print("Node: " + snode.get_mapped_id(this.id) + " doesn't know the successor so foreward the request to: " + 
-					snode.get_mapped_id(this.successor.getId()), logs_types.VERYVERBOSE);
+			print("Node: " + this.getSuperNodeNameForMe() + " doesn't know the successor so foreward the request to: " + 
+					this.successor.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
 			
 			//forward message to closest preceding node by schedule a message Find_successor_message
 			schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
@@ -408,7 +416,7 @@ public class Node{
 				
 				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + 
 						" send a message to the node: " + 
-						snode.get_mapped_id(target.getId()), logs_types.VERBOSE);
+						target.getSuperNodeNameForMe(), logs_types.VERBOSE);
 				
 				schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
 
@@ -489,16 +497,16 @@ public class Node{
 		
 		//check if i'm the only one in the net (my suc = me)
 		if(this.id.compareTo(this.successor.getId()) == 0) {
-			print("Node: " + snode.get_mapped_id(this.id) +
+			print("Node: " + this.getSuperNodeNameForMe() +
 					" FIND_SUCCESSOR: case succ = to me ", logs_types.VERBOSE);
 			return this.successor;
 		}
 		//check if the id that i have to find is in the interval (me, my_successor) 
 		//if it is than my successor is responsible for that id
 		if(check_interval(this.getId(), this.successor.getId(), i, false, true)) {
-			print("Node: " + snode.get_mapped_id(this.id) + 
+			print("Node: " + this.getSuperNodeNameForMe() + 
 					" FIND SUCCESSOR: case the id is between my successor and I so return my successor " +
-					"\n\t that is : " + snode.get_mapped_id(this.successor.getId()), logs_types.VERBOSE);
+					"\n\t that is : " + this.successor.getSuperNodeNameForMe(), logs_types.VERBOSE);
 			
 			return this.successor;
 		}else {
@@ -506,22 +514,22 @@ public class Node{
 			//a message has to be sent to the closest node that precede the id to be found
 			//and that node is in charge to reply if satisfy the two previous condition.
 			
-			print("Node: " + snode.get_mapped_id(this.id) + 
+			print("Node: " + this.getSuperNodeNameForMe() + 
 				" FIND SUCCESSOR: case the id is NOT in the interval so i search the nearest", logs_types.VERBOSE);
 			
 			Node n_prime = closest_preceding_node(i);
 			
 			//if i found that i'm the node responsible to this id i return myself
 			if(n_prime.getId().compareTo(this.id) == 0) {
-				print("Node: " + snode.get_mapped_id(this.id) + " Has found that the closest is me. " +
-						snode.get_mapped_id(this.successor.getId()), logs_types.VERBOSE);
+				print("Node: " + this.getSuperNodeNameForMe() + " Has found that the closest is me. " +
+						this.successor.getSuperNodeNameForMe(), logs_types.VERBOSE);
 				
 				return this;
 			}
 			
 			//if not return null and the Fixfinger will schedule a message to the closest preceding node
-			print("Node: " + snode.get_mapped_id(this.id) + 
-					" a message to che closest has to be sent " + snode.get_mapped_id(n_prime.getId()), logs_types.VERBOSE);
+			print("Node: " + this.getSuperNodeNameForMe() + 
+					" a message to che closest has to be sent to: " + n_prime.getSuperNodeNameForMe(), logs_types.VERBOSE);
 			
 			return null;
 		}
@@ -533,7 +541,7 @@ public class Node{
 	 * @return the closest node known
 	 */
 	private Node closest_preceding_node(BigInteger id) {
-		print("CLOSEST PRECEDING NODE: Node: " + snode.get_mapped_id(this.id) +
+		print("CLOSEST PRECEDING NODE: Node: " + this.getSuperNodeNameForMe() +
 				" search in his finger table the successor of : " + 
 				id, logs_types.VERBOSE);
 			
@@ -547,6 +555,9 @@ public class Node{
 			}
 		}
 		return this;
+		
+		//to obtain the version with no fingertable replace all the code above with:
+		/*return this.successor;*/
 	}
 	
 	/**
@@ -1008,7 +1019,7 @@ public class Node{
 				Node closest = closest_preceding_node(m.key);
 				if(this.getId().equals(closest.getId())) {
 					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but the object is not in my range:"
-							+ "\n\tTHIS IS CLEARLY AND ERROR", logs_types.MINIMAL);
+							+ "\n\tTHIS IS CLEARLY AND ERROR", logs_types.ZERO);
 					return;
 				}
 				print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe()
@@ -1020,16 +1031,15 @@ public class Node{
 		}
 	}
 	
-	
 	//used to become again blue after recive a new key 
-		public void remove_green () {
-			this.new_key_added = false;
-		}
+	public void remove_green () {
+		this.new_key_added = false;
+	}
 		
 	//used to become again blue after find a key 
-			public void remove_yellow () {
-				this.key_finded = false;
-			}
+	public void remove_yellow () {
+		this.key_finded = false;
+	}
 		
 	
 	/**
@@ -1130,48 +1140,46 @@ public class Node{
 	}
 	
 	//update the graphic of the fingers have to be called on each modification of the fingertable 
-		private void update_fingers_graphic () {
-			ArrayList<Node> myfingers = this.fingertable.getAllSucc();
-			Context <Object> context = ContextUtils.getContext(this);
-			Network<Object> fingerNetwork = (Network<Object>)context.getProjection("fingersNetwork");
-			//remove all previous edges 
-			ArrayList<RepastEdge<Object>> edges = new ArrayList<RepastEdge<Object>>();
-			Iterable<RepastEdge<Object>>  edgesiter = fingerNetwork.getOutEdges(this);	
-			for (RepastEdge<Object> edge : edgesiter) {
-				edges.add(edge);
-			}
-			for (RepastEdge<Object> edge : edges) {
-				fingerNetwork.removeEdge(edge);
-			}
-			
-			//add edges from this to all the fingers 
-			for (Node node : myfingers) {
-				fingerNetwork.addEdge(this, node);
-			}
-			
+	private void update_fingers_graphic () {
+		ArrayList<Node> myfingers = this.fingertable.getAllSucc();
+		Context <Object> context = ContextUtils.getContext(this);
+		Network<Object> fingerNetwork = (Network<Object>)context.getProjection("fingersNetwork");
+		//remove all previous edges 
+		ArrayList<RepastEdge<Object>> edges = new ArrayList<RepastEdge<Object>>();
+		Iterable<RepastEdge<Object>>  edgesiter = fingerNetwork.getOutEdges(this);	
+		for (RepastEdge<Object> edge : edgesiter) {
+			edges.add(edge);
 		}
-		//add an edge and remove all previous 
-		private void addEdge (String network_name, Node source, Node target) {
-			Context <Object> context = ContextUtils.getContext(this);
-			Network<Object> network = (Network<Object>)context.getProjection(network_name);
-			network.addEdge(source, target);
-			schedule_message(source, "removeEdge", network_name, 1);
+		for (RepastEdge<Object> edge : edges) {
+			fingerNetwork.removeEdge(edge);
 		}
 		
-		//remove all exit edges from this node
-		public void removeEdge (String network_name) {
-			Context <Object> context = ContextUtils.getContext(this);
-			Network<Object> network = (Network<Object>)context.getProjection(network_name);
-			//remove all previous edges 
-			ArrayList<RepastEdge<Object>> edges = new ArrayList<RepastEdge<Object>>();
-			Iterable<RepastEdge<Object>>  edgesiter = network.getOutEdges(this);	
-			for (RepastEdge<Object> edge : edgesiter) {
-				edges.add(edge);
-			}
-			for (RepastEdge<Object> edge : edges) {
-				network.removeEdge(edge);
-			}
-			
-			
+		//add edges from this to all the fingers 
+		for (Node node : myfingers) {
+			fingerNetwork.addEdge(this, node);
 		}
+			
+	}
+	//add an edge and remove all previous 
+	private void addEdge (String network_name, Node source, Node target) {
+		Context <Object> context = ContextUtils.getContext(this);
+		Network<Object> network = (Network<Object>)context.getProjection(network_name);
+		network.addEdge(source, target);
+		schedule_message(source, "removeEdge", network_name, 1);
+	}
+	
+	//remove all exit edges from this node
+	public void removeEdge (String network_name) {
+		Context <Object> context = ContextUtils.getContext(this);
+		Network<Object> network = (Network<Object>)context.getProjection(network_name);
+		//remove all previous edges 
+		ArrayList<RepastEdge<Object>> edges = new ArrayList<RepastEdge<Object>>();
+		Iterable<RepastEdge<Object>>  edgesiter = network.getOutEdges(this);	
+		for (RepastEdge<Object> edge : edgesiter) {
+			edges.add(edge);
+		}
+		for (RepastEdge<Object> edge : edges) {
+			network.removeEdge(edge);
+		}	
+	}
 }
