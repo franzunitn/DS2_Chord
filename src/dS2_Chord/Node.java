@@ -78,6 +78,8 @@ public class Node{
 	private boolean new_key_added = false;
 	private boolean key_finded = false;
 	
+	private BigInteger range_id;
+	
 	//Node Constructor
 	public Node(BigInteger id) {
 		this.id = id;
@@ -91,6 +93,7 @@ public class Node{
 		this.predecessor_has_reply = false;
 		this.log_level = logs_types.ZERO;
 		this.check_predecessor_counter = 0;
+		this.range_id = BigInteger.ZERO;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -1140,6 +1143,20 @@ public class Node{
 	
 	public Boolean get_key_finded () {
 		return this.key_finded;
+	}
+	
+	public void calculate_range_id(boolean is_zero) {
+		if(this.predecessor != null) {
+			if(is_zero) {
+				this.range_id = this.MAX_VALUE.subtract(this.predecessor.id);
+			}else {
+				this.range_id = this.id.subtract(this.predecessor.getId());
+			}
+		}
+	}
+	
+	public BigInteger get_range_id() {
+		return this.range_id;
 	}
 	
 	//update the graphic of the fingers have to be called on each modification of the fingertable 

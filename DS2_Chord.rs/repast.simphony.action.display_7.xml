@@ -1,5 +1,5 @@
 <repast.simphony.visualization.engine.CartesianDisplayDescriptor simphonyVersion="2.7.0">
-  <name>Chord</name>
+  <name>fingers</name>
   <type>2D</type>
   <styles>
     <entry>
@@ -15,29 +15,13 @@
   </editedStyles>
   <netStyles>
     <entry>
-      <string>joinNetwork</string>
-      <string>dS2_Chord.JoinNetworkStyle</string>
-    </entry>
-    <entry>
-      <string>notifyNetwork</string>
-      <string>dS2_Chord.NotifyNetworkStyle</string>
-    </entry>
-    <entry>
-      <string>stabilizeNetwork</string>
-      <string>dS2_Chord.StabilizeNetworkStyle</string>
+      <string>fingersNetwork</string>
+      <string>dS2_Chord.FingersNetworkStyle</string>
     </entry>
   </netStyles>
   <editedNetStyles>
     <entry>
-      <string>joinNetwork</string>
-      <null/>
-    </entry>
-    <entry>
-      <string>notifyNetwork</string>
-      <null/>
-    </entry>
-    <entry>
-      <string>stabilizeNetwork</string>
+      <string>fingersNetwork</string>
       <null/>
     </entry>
   </editedNetStyles>
@@ -49,7 +33,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>-2023492899</hashCode>
+    <hashCode>-753898658</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>
@@ -67,17 +51,7 @@
       <type>continuous space</type>
     </repast.simphony.scenario.data.ProjectionData>
     <repast.simphony.scenario.data.ProjectionData>
-      <id>joinNetwork</id>
-      <attributes/>
-      <type>network</type>
-    </repast.simphony.scenario.data.ProjectionData>
-    <repast.simphony.scenario.data.ProjectionData>
-      <id>stabilizeNetwork</id>
-      <attributes/>
-      <type>network</type>
-    </repast.simphony.scenario.data.ProjectionData>
-    <repast.simphony.scenario.data.ProjectionData>
-      <id>notifyNetwork</id>
+      <id>fingersNetwork</id>
       <attributes/>
       <type>network</type>
     </repast.simphony.scenario.data.ProjectionData>
@@ -87,23 +61,9 @@
   </visualizationProperties>
   <projectionDescriptors>
     <entry>
-      <string>joinNetwork</string>
+      <string>fingersNetwork</string>
       <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
         <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[2]"/>
-        <props/>
-      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
-    </entry>
-    <entry>
-      <string>notifyNetwork</string>
-      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
-        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[4]"/>
-        <props/>
-      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
-    </entry>
-    <entry>
-      <string>stabilizeNetwork</string>
-      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
-        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[3]"/>
         <props/>
       </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
     </entry>

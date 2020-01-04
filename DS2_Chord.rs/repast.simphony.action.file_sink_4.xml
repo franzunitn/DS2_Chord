@@ -1,12 +1,13 @@
 <repast.simphony.data2.engine.FileSinkDescriptor simphonyVersion="2.7.0">
-  <name>Number_of_keys_per_node</name>
-  <dataSet>Number of keys per node</dataSet>
+  <name>equal_range_id_test</name>
+  <dataSet>equal_range_id_dataset</dataSet>
   <delimiter>,</delimiter>
   <format>TABULAR</format>
   <sourceIds class="linked-hash-set">
     <string>Id</string>
-    <string>keys_size</string>
+    <string>SuperNodeNameForMe</string>
+    <string>range_id</string>
   </sourceIds>
-  <fileName>Number_of_keys_per_node.csv</fileName>
+  <fileName>equal_range_id_test.csv</fileName>
   <addTimeStamp>true</addTimeStamp>
 </repast.simphony.data2.engine.FileSinkDescriptor>

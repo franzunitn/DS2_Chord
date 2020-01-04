@@ -1,5 +1,5 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.7.0">
-  <name>test_mattia</name>
+  <name>Number of keys per node</name>
   <type>NON_AGGREGATE</type>
   <sourceType>dS2_Chord.Node</sourceType>
   <inclTick>true</inclTick>
@@ -12,7 +12,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>ONE_TIME</frequency>
-    <hashCode>541915600</hashCode>
+    <hashCode>-193422420</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
@@ -25,11 +25,11 @@
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>
     <entry>
-      <string>_id_range</string>
+      <string>keys_size</string>
       <repast.simphony.data2.engine.MethodDataSourceDefinition>
-        <id>_id_range</id>
+        <id>keys_size</id>
         <className>dS2_Chord.Node</className>
-        <methodName>get_id_range</methodName>
+        <methodName>get_keys_size</methodName>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>
   </methodDataSources>

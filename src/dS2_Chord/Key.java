@@ -10,7 +10,7 @@ public class Key {
 	
 	public Key() {
 		try {
-		md = MessageDigest.getInstance("SHA-1"); 
+			md = MessageDigest.getInstance("SHA-1"); 
 		}
 		catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e); 

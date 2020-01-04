@@ -1,12 +1,12 @@
 <repast.simphony.data2.engine.FileSinkDescriptor simphonyVersion="2.7.0">
-  <name>test_mattia</name>
-  <dataSet>test_mattia</dataSet>
+  <name>Number_of_keys_per_node</name>
+  <dataSet>Number of keys per node</dataSet>
   <delimiter>,</delimiter>
   <format>TABULAR</format>
   <sourceIds class="linked-hash-set">
     <string>Id</string>
-    <string>_id_range</string>
+    <string>keys_size</string>
   </sourceIds>
-  <fileName>test_mattia.csv</fileName>
+  <fileName>Number_of_keys_per_node.csv</fileName>
   <addTimeStamp>true</addTimeStamp>
 </repast.simphony.data2.engine.FileSinkDescriptor>

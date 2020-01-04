@@ -1,5 +1,5 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.7.0">
-  <name>Number of keys per node</name>
+  <name>equal_range_id_dataset</name>
   <type>NON_AGGREGATE</type>
   <sourceType>dS2_Chord.Node</sourceType>
   <inclTick>true</inclTick>
@@ -12,7 +12,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>ONE_TIME</frequency>
-    <hashCode>-193422420</hashCode>
+    <hashCode>1538981227</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
@@ -25,11 +25,19 @@
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>
     <entry>
-      <string>keys_size</string>
+      <string>SuperNodeNameForMe</string>
       <repast.simphony.data2.engine.MethodDataSourceDefinition>
-        <id>keys_size</id>
+        <id>SuperNodeNameForMe</id>
         <className>dS2_Chord.Node</className>
-        <methodName>get_keys_size</methodName>
+        <methodName>getSuperNodeNameForMe</methodName>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>range_id</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>range_id</id>
+        <className>dS2_Chord.Node</className>
+        <methodName>get_range_id</methodName>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>
   </methodDataSources>

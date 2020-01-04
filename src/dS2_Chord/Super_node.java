@@ -545,7 +545,7 @@ public class Super_node {
 	/**
 	 * test if a use correctly the fingertable
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_finger() {
 		Object a = new Object();
 		if(!this.test) {
@@ -1267,6 +1267,70 @@ public class Super_node {
 		}
 	}
 	
+	@ScheduledMethod(start = 1, interval = 1)
+	public void test_equal_range() {
+		if(!this.test) {
+			this.test = true;
+			
+			//first of all schedule the join of the nodes and reach a stable state
+			for(int i = 0; i < this.max_number_of_nodes; i++) {
+				if(i == 0) {
+					schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 1);
+				}else {
+					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, i + 3);
+				}
+			}
+		}
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}else {
+				print("Node : not active--> " + o.getSuperNodeNameForMe());
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		Object a = new Object();
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+				}
+			
+			//check predecessor procedure
+			if(tick_count % this.stabilize_tick * 4 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+				}
+			
+			if(tick_count % 100 == 0) {
+				if(o.getId().compareTo(this.all_nodes.get(0).getId()) == 0) {
+					schedule_action(o, "calculate_range_id", a, true, 1);
+				}else {
+					schedule_action(o, "calculate_range_id", a, false, 1);
+				}
+				
+			}
+		}
+		
+		
+		print("ACTIVE NODES: " + active_nodes.size());
+	}
+	
+	
+	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
 		//schedule receive of a fins successor message in the next tick
 		double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
@@ -1314,6 +1378,14 @@ public class Super_node {
 			case "check_finger_table":
 				RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 				break;
+			case "calculate_range_id":
+				if(is_first) {
+					RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, true);
+					break;
+				}else {
+					RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, false);
+					break;
+				}
 			default : 
 				System.out.println("In supernode schedule_action: Method not recognized " + method);
 		}

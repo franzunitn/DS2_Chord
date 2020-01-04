@@ -123,17 +123,17 @@ public class Network_Builder implements ContextBuilder<Object> {
 		Dictionary<BigInteger, Integer> d = new Hashtable();
 		
 		
-		/*for (int i = 0; i < nodes -1; i++) {
+		for (int i = 0; i < nodes; i++) {
 			//create the new key
 			BigInteger new_key = k.encryptThisString(Integer.toString(i)); 
 			//create a new node
-			//System.out.println(new_key.toString());
+			System.out.println(new_key.toString());
 			Node n = new Node(new_key);
 			//add the node to the list
 			current_nodes.add(n);
 		}
+		/*
 		
-		*/ 
 		//MANUALLY create some node with closer range of id to test fixfinger
 		BigInteger max = BigInteger.ZERO.setBit(160).subtract(BigInteger.ONE);
 		BigInteger number_node = BigInteger.valueOf(nodes);
@@ -148,7 +148,7 @@ public class Network_Builder implements ContextBuilder<Object> {
 			Node n = new Node(new_key);
 			//add the node to the list
 			current_nodes.add(n);
-		}
+		}*/
 		
 		//sort the node by key to construct the ring topology
 		Collections.sort(current_nodes, new Comparator<Node>() {
