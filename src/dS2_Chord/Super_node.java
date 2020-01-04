@@ -562,16 +562,16 @@ public class Super_node {
 					tick = tick + 5;
 				}
 				//print status
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(10), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(20), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(30), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(40), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(50), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(60), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(70), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(80), "printActualState", a, false, 10000);
-				schedule_action(this.all_nodes.get(99), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(4), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(5), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(6), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(7), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(8), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(9), "printActualState", a, false, 2000);
 				
 			}
 		}

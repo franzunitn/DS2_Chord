@@ -1,6 +1,10 @@
 package dS2_Chord;
 import dS2_Chord.Key;
+
+import java.awt.print.Printable;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -8,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Random;
 
 import dS2_Chord.StdRandom;
 import dS2_Chord.Node;
@@ -122,10 +127,10 @@ public class Network_Builder implements ContextBuilder<Object> {
 		//Dictionary to map hash id into a more visualize integer id
 		Dictionary<BigInteger, Integer> d = new Hashtable();
 		
-		
+		Random rd = new Random();
 		for (int i = 0; i < nodes; i++) {
 			//create the new key
-			BigInteger new_key = k.encryptThisString(Integer.toString(i)); 
+			BigInteger new_key = k.encryptThisString(Integer.toString(rd.nextInt())); 
 			//create a new node
 			System.out.println(new_key.toString());
 			Node n = new Node(new_key);
@@ -182,8 +187,12 @@ public class Network_Builder implements ContextBuilder<Object> {
         double center = spaceSize / 2;
         double radius = center - 2;
         int nodeCount = current_nodes.size();
+        BigDecimal MAX_VALUE = new BigDecimal(BigInteger.ZERO.setBit(160).subtract(BigInteger.ONE));
         for (int i = 0; i < nodeCount; i++) {
-            double theta = 2 * Math.PI * i / nodeCount;
+        	BigInteger id = current_nodes.get(i).getId();
+        	BigDecimal id_d = new BigDecimal(id);
+        	double multiplier = id_d.divide(MAX_VALUE,3, RoundingMode.HALF_UP).doubleValue();
+        	double theta = 2 * Math.PI * (multiplier);
             double x = center + radius * Math.cos(theta);
             double y = center + radius * Math.sin(theta);
             space.moveTo(current_nodes.get(i), x, y);
