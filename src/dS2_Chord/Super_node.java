@@ -1058,7 +1058,7 @@ public class Super_node {
 	}
 	
 	
-	@ScheduledMethod(start = 1, interval = 1)
+	//@ScheduledMethod(start = 1, interval = 1)
 	public void num_key_per_node_test() {
 		if(!this.test) {
 			this.test = true;
@@ -1146,6 +1146,109 @@ public class Super_node {
 				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
 
 			}
+		}
+		
+		if(tick_count % 50 == 0) {
+			schedule_action(this.all_nodes.get(0), "printActualStateMinimal", a, false, 1);
+		}
+		
+		if(active_nodes.size() < this.max_number_of_nodes) {
+			print("ACTIVE NODES: " + active_nodes.size());
+		}
+		
+		if(tick_count % 2999 == 0) {
+			for(Node n : active_nodes) {
+				schedule_action(n, "printActualState", a, false, 1);
+			}
+		}
+	}
+	
+	//@ScheduledMethod(start = 1, interval = 1)
+	public void path_lengh_test() {
+		if(!this.test) {
+			this.test = true;
+			
+			//first of all schedule the join of the nodes and reach a stable state
+			for(int i = 0; i < this.max_number_of_nodes; i++) {
+				if(i == 0) {
+					schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 1);
+				}else {
+					
+					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, i + 3);
+				}
+			}
+		}
+			
+		Random rand_generator = new Random();
+		
+		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		for(Node o: this.all_nodes) {
+			//if a node is active
+			if(o.get_state() == 0) {
+				active_nodes.add(o);
+			}
+		}
+		
+		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+		Object a = new Object();
+		
+		//schedule_action(this.all_nodes.get(1), "printActualState", a, false, 0);
+		//schedule_action(this.all_nodes.get(0), "printActualState", a, false, 0);
+		if(active_nodes.size() == this.max_number_of_nodes && !insert_done) {
+			if(this.stable) {
+				print(" ----------Entered the insert procedure----------- ");
+				insert_done = true;
+				int keys = 0;
+				Key key_generator = new Key();
+				
+				while(keys < this.max_number_of_keys) {
+					BigInteger random_key = key_generator.encryptThisString("" + keys + rand_generator.nextInt());
+					if(!this.keys.contains(random_key)) {
+						this.keys.add(random_key);
+						Node random_node = this.all_nodes.get(rand_generator.nextInt(active_nodes.size()));
+						schedule_action(random_node, "insert", random_key, false, rand_generator.nextInt(100));
+						keys++;
+						if(keys % 1000 == 0) {
+							print("scheduled: " + keys/1000 + "/" + this.max_number_of_keys/1000 + "K");
+						}
+					}
+				}
+				print(" ----------Exit the insert procedure----------- ");
+				this.finish = tick_count + 300;
+				RunEnvironment.getInstance().endAt(this.finish);
+			}else {
+				print("waiting: " + this.stable_counter + "/3000");
+				this.stable_counter++;
+				if(this.stable_counter >= 3000) {
+					this.stable = true;
+				}
+				
+			}
+		}else {
+			if(active_nodes.size() == this.max_number_of_nodes) {
+				print("Mancano: " + (this.finish - tick_count) + " Tick");
+			}
+		}
+		
+		for(Node o : active_nodes) {
+			//check if it is the time to schedule a stabilize
+			if(tick_count % this.stabilize_tick == 0) {
+				
+				schedule_action(o, "stabilize", a, false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
+			}
+			
+			//check if is the time to schedule a fixFingers
+			if(tick_count % this.fix_finger_tick == 0) {
+				schedule_action(o, "fixFingers", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
+				}
+			
+			//check predecessor procedure
+			if(tick_count % this.stabilize_tick * 4 == 0) {
+				schedule_action(o, "check_predecessor", "", false, 1);
+				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
+				}
 		}
 		
 		if(tick_count % 50 == 0) {

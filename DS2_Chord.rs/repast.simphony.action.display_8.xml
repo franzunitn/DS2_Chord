@@ -1,5 +1,5 @@
 <repast.simphony.visualization.engine.CartesianDisplayDescriptor simphonyVersion="2.7.0">
-  <name>fingers</name>
+  <name>Keys</name>
   <type>2D</type>
   <styles>
     <entry>
@@ -15,13 +15,29 @@
   </editedStyles>
   <netStyles>
     <entry>
-      <string>fingersNetwork</string>
-      <string>dS2_Chord.FingersNetworkStyle</string>
+      <string>insertNetwork</string>
+      <string>dS2_Chord.InsertNetworkStyle</string>
+    </entry>
+    <entry>
+      <string>keyFindedNetwork</string>
+      <string>dS2_Chord.KeyFindedNetworkStyle</string>
+    </entry>
+    <entry>
+      <string>lookupNetwork</string>
+      <string>dS2_Chord.LookupNetworkStyle</string>
     </entry>
   </netStyles>
   <editedNetStyles>
     <entry>
-      <string>fingersNetwork</string>
+      <string>insertNetwork</string>
+      <null/>
+    </entry>
+    <entry>
+      <string>keyFindedNetwork</string>
+      <null/>
+    </entry>
+    <entry>
+      <string>lookupNetwork</string>
       <null/>
     </entry>
   </editedNetStyles>
@@ -33,7 +49,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>-753898658</hashCode>
+    <hashCode>-2023492899</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>
@@ -51,7 +67,17 @@
       <type>continuous space</type>
     </repast.simphony.scenario.data.ProjectionData>
     <repast.simphony.scenario.data.ProjectionData>
-      <id>fingersNetwork</id>
+      <id>insertNetwork</id>
+      <attributes/>
+      <type>network</type>
+    </repast.simphony.scenario.data.ProjectionData>
+    <repast.simphony.scenario.data.ProjectionData>
+      <id>lookupNetwork</id>
+      <attributes/>
+      <type>network</type>
+    </repast.simphony.scenario.data.ProjectionData>
+    <repast.simphony.scenario.data.ProjectionData>
+      <id>keyFindedNetwork</id>
       <attributes/>
       <type>network</type>
     </repast.simphony.scenario.data.ProjectionData>
@@ -61,9 +87,23 @@
   </visualizationProperties>
   <projectionDescriptors>
     <entry>
-      <string>fingersNetwork</string>
+      <string>insertNetwork</string>
       <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
         <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[2]"/>
+        <props/>
+      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+    </entry>
+    <entry>
+      <string>keyFindedNetwork</string>
+      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[4]"/>
+        <props/>
+      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+    </entry>
+    <entry>
+      <string>lookupNetwork</string>
+      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[3]"/>
         <props/>
       </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
     </entry>
