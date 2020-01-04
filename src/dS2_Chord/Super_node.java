@@ -545,31 +545,34 @@ public class Super_node {
 	/**
 	 * test if a use correctly the fingertable
 	 */
-	//@ScheduledMethod (start = 1, interval = 1)
+	@ScheduledMethod (start = 1, interval = 1)
 	public void test_finger() {
 		Object a = new Object();
 		if(!this.test) {
 			this.test = true;
 			
 			//test if some nodes leave in order
-			if(false) {
-				//schedule all the join
-				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 5);
-				schedule_action(this.all_nodes.get(1), "join", this.all_nodes.get(0), false, 15);
-				schedule_action(this.all_nodes.get(2), "join", this.all_nodes.get(0), false, 25);
-				schedule_action(this.all_nodes.get(3), "join", this.all_nodes.get(0), false, 35);
+			if(true) {
+				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 2);
+				int tick = 3;
 				
+				//all others
+				for (int i = 1; i < this.all_nodes.size(); i++) {
+					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, tick);
+					tick = tick + 5;
+				}
 				//print status
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 100);
-				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 100);
-				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 100);
-				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 100);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(10), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(20), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(30), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(40), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(50), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(60), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(70), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(80), "printActualState", a, false, 10000);
+				schedule_action(this.all_nodes.get(99), "printActualState", a, false, 10000);
 				
-				//schedule the leave
-				schedule_action(this.all_nodes.get(3), "leave", this.all_nodes.get(0), false, 160);
-				schedule_action(this.all_nodes.get(2), "leave", this.all_nodes.get(0), false, 170);
-				schedule_action(this.all_nodes.get(1), "leave", this.all_nodes.get(0), false, 180);
-				schedule_action(this.all_nodes.get(0), "leave", this.all_nodes.get(0), false, 190);
 			}
 		}
 		
@@ -606,8 +609,6 @@ public class Super_node {
 
 			}
 		}
-		
-		print("CURRENT ACTIVE NODES: " + active_nodes.size());
 	}
 	
 	/**
