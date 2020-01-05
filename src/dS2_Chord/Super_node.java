@@ -543,7 +543,7 @@ public class Super_node {
 	/**
 	 * test if a use correctly the fingertable
 	 */
-	@ScheduledMethod (start = 1, interval = 1)
+	//@ScheduledMethod (start = 1, interval = 1)
 	public void test_finger() {
 		Object a = new Object();
 		if(!this.test) {
@@ -649,8 +649,8 @@ public class Super_node {
 				BigInteger key_two = k.encryptThisString("key_two");
 				BigInteger key_three = k.encryptThisString("key_three");
 				schedule_action(this.all_nodes.get(1), "insert", key_one, true, 200);
-				schedule_action(this.all_nodes.get(1), "insert", key_two, true, 210);
-				schedule_action(this.all_nodes.get(1), "insert", key_three, true, 220);
+				schedule_action(this.all_nodes.get(1), "insert", key_two, true, 200);
+				schedule_action(this.all_nodes.get(1), "insert", key_three, true, 200);
 				
 				//print status
 				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 250);
@@ -1048,10 +1048,8 @@ public class Super_node {
 	}
 	
 	
-	//@ScheduledMethod(start = 1, interval = 1)
+	@ScheduledMethod(start = 1, interval = 1)
 	public void num_key_per_node_test() {
-		
-		
 		
 		if(!this.test) {
 			this.test = true;
@@ -1082,13 +1080,17 @@ public class Super_node {
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		Object a = new Object();
 		Key key_generator = new Key();
-		
+		ArrayList<Node> selected_nodes = new ArrayList<Node>();
 		if (active_nodes.size() == this.max_number_of_nodes && this.keys.size() < this.max_number_of_keys) {
 			for(int i = 0; i < this.new_keys && this.keys.size() < this.max_number_of_keys; i++) {
 				//select a random node and ask him to insert the new key
-				int random_node = rand_generator.nextInt(this.max_number_of_nodes);
-				Node target = active_nodes.get(random_node);
+				Node target;
+				do {
+					int random_node = rand_generator.nextInt(this.max_number_of_nodes);
+					target = active_nodes.get(random_node);
+				} while(selected_nodes.contains(target));
 				
+				selected_nodes.add(target);
 				BigInteger new_key = key_generator.encryptThisString(Integer.toString(rand_generator.nextInt()*rand_generator.nextInt()));
 				
 				//add the new key in the array of keys
@@ -1105,7 +1107,7 @@ public class Super_node {
 			}
 		}
 		
-		if (tick_count % 1000 == 0) {
+		if (tick_count % 100 == 0) {
 			print("Keys in the ring: " + this.keys.size() + "/" + this.max_number_of_keys);
 		}
 		
