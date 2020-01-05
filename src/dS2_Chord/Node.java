@@ -427,7 +427,6 @@ public class Node{
 
 				
 				schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
-
 			}
 		}
 	}
@@ -552,8 +551,7 @@ public class Node{
 		print("CLOSEST PRECEDING NODE: Node: " + this.getSuperNodeNameForMe() +
 				" search in his finger table the successor of : " + 
 				id, logs_types.VERBOSE);
-		return this.successor;
-		/*
+		
 		for(int i = this.fingertable.getDimension()-1; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
 				
