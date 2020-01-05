@@ -179,7 +179,7 @@ public class Node{
 				schedule_message(n, "on_find_successor_receive", m, 1);
 				
 				//add edge of the join network 
-				addEdge("joinNetwork", this, m.source);
+				addEdge("joinNetwork", this, n);
 			}	
 		}
 	}
@@ -201,14 +201,39 @@ public class Node{
 			
 			Node closest = find_successor(target_id);
 			
+			if(closest == null) {
+				//case when the closest procedure has found a near node than me so forward the message to him
+				//and let him menage the reserch
+				
+				//only to double check
+				if(closest_preceding_node(target_id) == this) {
+					System.err.println("CLOSEST IS NULL BUT CLOSEST PROCEDURE HAS RETURN THIS");
+				}
+				schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
+				
+			}else if(closest.getId().compareTo(this.successor.getId()) == 0) {
+				//case the target_id is between me and my successor 
+				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
+				//addEdge("joinNetwork", this, m.source);
+			}else if(closest.getId().compareTo(this.id) == 0) {
+				//case the closest is me so i'm your successor
+				schedule_message(m.source, "on_receive_join_reply", this, 1);
+			}else {
+				System.err.println("CLOSEST IS NOT NULL AND IS NOT ME OR MY SUCCESSOR");
+				System.err.println(" \t Node: " + this.getSuperNodeNameForMe() + " has receive a request to find successor of: " + 
+									m.source.getSuperNodeNameForMe());
+			}
+			
+			
+			/*
 			if (closest != null) {
 				
 				print("Node: " + this.getSuperNodeNameForMe() + " know the successor of   " + 
 						m.source.getSuperNodeNameForMe() +
 						" so reply to him with " + closest.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
 				
-				schedule_message(m.source, "on_receive_join_reply", this.successor, 1);
-				addEdge("joinNetwork", this, m.source);
+				schedule_message(m.source, "on_receive_join_reply", this, 1);
+				//addEdge("joinNetwork", this, m.source);
 				return;
 			}
 			
@@ -217,7 +242,7 @@ public class Node{
 			
 			//forward message to closest preceding node by schedule a message Find_successor_message
 			schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
-			addEdge("joinNetwork", this, closest_preceding_node(target_id));
+			addEdge("joinNetwork", this, closest_preceding_node(target_id));*/
 		}
 	}
 	
@@ -551,7 +576,8 @@ public class Node{
 				" search in his finger table the successor of : " + 
 				id, logs_types.VERBOSE);
 		
-		for(int i = this.fingertable.getDimension()-1; i > 0; i--) {
+		//for(int i = this.fingertable.getDimension()-1; i > 0; i--) {
+		for(int i = this.fingertable.getM()-1; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
 				
 				print("\n\t case when the index " + this.fingertable.getIndex(i) + " is in range : (" + snode.get_mapped_id(this.id) + ", " + id + 
