@@ -560,16 +560,7 @@ public class Super_node {
 					tick = tick + 5;
 				}
 				//print status
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(1), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(2), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(3), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(4), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(5), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(6), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(7), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(8), "printActualState", a, false, 2000);
-				schedule_action(this.all_nodes.get(9), "printActualState", a, false, 2000);
+				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 10000);
 				
 			}
 		}
@@ -1079,17 +1070,46 @@ public class Super_node {
 		Random rand_generator = new Random();
 		
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
+		ArrayList<BigInteger> active_nodes_ids = new ArrayList<>();
 		for(Node o: this.all_nodes) {
 			//if a node is active
 			if(o.get_state() == 0) {
 				active_nodes.add(o);
+				active_nodes_ids.add(o.getId());
 			}
 		}
 		
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		Object a = new Object();
+		Key key_generator = new Key();
 		
-		if(active_nodes.size() == this.max_number_of_nodes && !insert_done) {
+		if (active_nodes.size() == this.max_number_of_nodes && this.keys.size() < this.max_number_of_keys) {
+			for(int i = 0; i < this.new_keys && this.keys.size() < this.max_number_of_keys; i++) {
+				//select a random node and ask him to insert the new key
+				int random_node = rand_generator.nextInt(this.max_number_of_nodes);
+				Node target = active_nodes.get(random_node);
+				
+				BigInteger new_key = key_generator.encryptThisString(Integer.toString(rand_generator.nextInt()*rand_generator.nextInt()));
+				
+				//add the new key in the array of keys
+				if (this.keys.contains(new_key)) {
+					print("key already in the system");
+				} else if (active_nodes_ids.contains(new_key)) {
+					print("The key is a node id!");
+				} else {
+					this.keys.add(new_key);
+				}
+				
+				//schedule the insertion of a new key
+				schedule_action(target, "insert", new_key, false, 1);
+			}
+		}
+		
+		if (tick_count % 1000 == 0) {
+			print("Keys in the ring: " + this.keys.size() + "/" + this.max_number_of_keys);
+		}
+		
+		/*if(active_nodes.size() == this.max_number_of_nodes && !insert_done) {
 			if(this.stable) {
 				print(" ----------Entered the insert procedure----------- ");
 				insert_done = true;
@@ -1111,7 +1131,7 @@ public class Super_node {
 					this.stable = true;
 				}
 			}
-		}
+		}*/
 		
 		for(Node o : active_nodes) {
 			//check if it is the time to schedule a stabilize
@@ -1136,12 +1156,12 @@ public class Super_node {
 			}
 		}
 		
-		if(tick_count % 50 == 0) {
+		/*if(tick_count % 50 == 0) {
 			schedule_action(this.all_nodes.get(0), "printActualState", a, false, 1);
 		}
 		
 		
-		print("ACTIVE NODES: " + active_nodes.size());
+		print("ACTIVE NODES: " + active_nodes.size());*/
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {

@@ -88,7 +88,7 @@ public class Node{
 		this.state = Node_state.INACTIVE;
 		this.mykeys = new ArrayList<BigInteger>();
 		this.predecessor_has_reply = false;
-		this.log_level = logs_types.MINIMAL;
+		this.log_level = logs_types.ZERO;
 	}
 	
 	public String getSuperNodeNameForMe() {
@@ -123,7 +123,7 @@ public class Node{
 		} else {
 			print("Predecessor: NULL id: NULL", logs_types.ZERO);
 		}
-		print(this.fingertable.toString(), logs_types.MINIMAL);
+		print(this.fingertable.toString(), logs_types.ZERO);
 		String myKeys_str = "MyKeys: (" + this.mykeys.size() + ")";
 		for (BigInteger big : this.mykeys) {
 			print("[key: " + big.toString() + "]", logs_types.MINIMAL);
@@ -393,7 +393,7 @@ public class Node{
 			Node n = find_successor(index);
 			
 			//case that the successor of index is my successor
-			if(n != null) {
+			if(n != null && n.getId().compareTo(this.id) != 0) {
 				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + " the successor of indx is my successor " + this.successor.getSuperNodeNameForMe(), logs_types.MINIMAL);
 				this.fingertable.setNewNode(this.next, n);
 				update_fingers_graphic();
@@ -403,14 +403,13 @@ public class Node{
 				Fix_finger_find_successor_message m = new Fix_finger_find_successor_message(this, index, this.next);
 				
 				//get the target node
-				Node target = closest_preceding_node(index);
+				Node target = n == null ? closest_preceding_node(index) : this.successor;
 				
 				print("FIXFINGER: Node: " + snode.get_mapped_id(this.id) + 
 						" send a message to the node: " + 
 						snode.get_mapped_id(target.getId()), logs_types.MINIMAL);
 				
 				schedule_message(target, "on_fixfinger_find_successor_message", m, 1);
-
 			}
 		}
 	}
@@ -427,7 +426,7 @@ public class Node{
 		Node n = find_successor(m.index);
 		
 		//if i found the successor than create and schedule a reply message
-		if(n != null) {
+		if(n != null && n.getId().compareTo(this.id) != 0) {
 			//find the successor send reply message
 			Fix_finger_find_successor_reply_message rm = new Fix_finger_find_successor_reply_message(n, m.next);
 			
@@ -450,7 +449,7 @@ public class Node{
 					snode.get_mapped_id(this.successor.getId()) + " to find a successor for the fixfinger ", logs_types.VERBOSE);
 			
 			//find the closest preceding node and forward him the request
-			Node target = closest_preceding_node(m.index);
+			Node target = n == null ? closest_preceding_node(m.index) : this.successor;
 			
 			//schedule the receive of a message
 
