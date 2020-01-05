@@ -136,7 +136,7 @@ public class Node{
 		} else {
 			print("Predecessor: NULL id: NULL", logs_types.ZERO);
 		}
-		print(this.fingertable.toString(), logs_types.ZERO);
+		print(this.fingertable.toString(), logs_types.MINIMAL);
 		String myKeys_str = "MyKeys: (" + this.mykeys.size() + ")";
 		for (BigInteger big : this.mykeys) {
 			print("[key: " + big.toString() + "]", logs_types.ZERO);
@@ -144,7 +144,6 @@ public class Node{
 
 		print(myKeys_str, logs_types.ZERO);
 		print("Max_BigIntegerValue: " + MAX_VALUE.toString() + "!", logs_types.MINIMAL);
-
 	}
 	
 	/*
