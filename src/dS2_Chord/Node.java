@@ -967,7 +967,7 @@ public class Node{
 			Node target = find_successor(new_key);
 			//Create the message
 			insert_message m = new insert_message(this, new_key);
-			if (target != null) {
+			if (target != null && target.getId().compareTo(this.id) != 0) {
 				//If the successor exist and is the right node send the insert message to him
 				print("INSERT, Node: " + this.getSuperNodeNameForMe()
 					+ ", I send an insert message to the node " + target.getSuperNodeNameForMe()
@@ -976,7 +976,7 @@ public class Node{
 				addEdge("insertNetwork", this, target);
 			}
 			else {
-				Node closest = closest_preceding_node(m.key);
+				Node closest = target == null ? closest_preceding_node(m.key) : this.successor;
 				if(this.getId().equals(closest.getId())) {
 					print("INSERT, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but the object is not in my range:"
 							+ "\n\tTHIS IS CLEARLY AND ERROR", logs_types.VERBOSE);
@@ -1014,7 +1014,7 @@ public class Node{
 			Node target = find_successor(new_key);
 			//Create the message
 			insert_message m = new insert_message(this, new_key);
-			if (target != null) {
+			if (target != null && target.getId().compareTo(this.id) != 0) {
 				//If the successor exist and is the right node send the insert message to him
 				print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe()
 					+ ", I send an insert message to the node " + target.getSuperNodeNameForMe()
@@ -1023,7 +1023,7 @@ public class Node{
 				addEdge("insertNetwork", this, target);
 			}
 			else {
-				Node closest = closest_preceding_node(m.key);
+				Node closest = target == null ? closest_preceding_node(m.key) : this.successor;
 				if(this.getId().equals(closest.getId())) {
 					print("ON_INSERT_MESSAGE, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but the object is not in my range:"
 							+ "\n\tTHIS IS CLEARLY AND ERROR", logs_types.VERBOSE);
