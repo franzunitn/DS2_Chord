@@ -16,7 +16,7 @@ public class FingersNetworkStyle extends DefaultEdgeStyleOGL2D {
 	@Override
 	public int getLineWidth(RepastEdge<?> edge) {
 		// TODO Auto-generated method stub
-		return 2;
+		return 1;
 	}
 	
 	

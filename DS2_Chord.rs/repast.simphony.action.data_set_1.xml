@@ -1,5 +1,5 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.7.0">
-  <name>Number of keys per node</name>
+  <name>Number_of_keys_per_node_dataset</name>
   <type>NON_AGGREGATE</type>
   <sourceType>dS2_Chord.Node</sourceType>
   <inclTick>true</inclTick>
@@ -12,7 +12,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>ONE_TIME</frequency>
-    <hashCode>-193422420</hashCode>
+    <hashCode>1712631217</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
@@ -22,6 +22,14 @@
         <id>Id</id>
         <className>dS2_Chord.Node</className>
         <methodName>getId</methodName>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>SuperNodeNameForMe</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>SuperNodeNameForMe</id>
+        <className>dS2_Chord.Node</className>
+        <methodName>getSuperNodeNameForMe</methodName>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>
     <entry>

@@ -2,6 +2,10 @@ package dS2_Chord;
 import dS2_Chord.Key;
 
 import java.awt.print.Printable;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -12,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Random;
 
 import dS2_Chord.StdRandom;
@@ -137,8 +142,40 @@ public class Network_Builder implements ContextBuilder<Object> {
 			//add the node to the list
 			current_nodes.add(n);
 		}
-		/*
 		
+		/*
+		//read the ids from csv
+		boolean is_first = true;
+		List<BigInteger> records = new ArrayList<BigInteger>();
+		try (BufferedReader br = new BufferedReader(new FileReader("ids.csv"))) {
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		    	if(is_first) {
+		    		is_first = false;
+		    	}else {
+		    		String[] values = line.split(",");
+			        records.add(new BigInteger(values[0]));
+		    	}
+		        
+		    }
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+		}
+		
+		//maually assign the id read from csv
+		for(int i = 0 ; i < nodes ; i++) {
+			BigInteger new_id = records.get(i);
+			System.out.println(new_id.toString());
+			Node n = new Node(new_id);
+			//add the node to the list
+			current_nodes.add(n);
+		}*/
+		
+		/*
 		//MANUALLY create some node with closer range of id to test fixfinger
 		BigInteger max = BigInteger.ZERO.setBit(160).subtract(BigInteger.ONE);
 		BigInteger number_node = BigInteger.valueOf(nodes);

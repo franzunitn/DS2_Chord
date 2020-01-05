@@ -1,10 +1,11 @@
 <repast.simphony.data2.engine.FileSinkDescriptor simphonyVersion="2.7.0">
-  <name>Number_of_keys_per_node</name>
-  <dataSet>Number of keys per node</dataSet>
+  <name>number_of_keys_file_sink</name>
+  <dataSet>Number_of_keys_per_node_dataset</dataSet>
   <delimiter>,</delimiter>
   <format>TABULAR</format>
   <sourceIds class="linked-hash-set">
     <string>Id</string>
+    <string>SuperNodeNameForMe</string>
     <string>keys_size</string>
   </sourceIds>
   <fileName>Number_of_keys_per_node.csv</fileName>

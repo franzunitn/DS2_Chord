@@ -1059,7 +1059,7 @@ public class Super_node {
 	}
 	
 	
-	//@ScheduledMethod(start = 1, interval = 1)
+	@ScheduledMethod(start = 1, interval = 1)
 	public void num_key_per_node_test() {
 		if(!this.test) {
 			this.test = true;
@@ -1088,8 +1088,6 @@ public class Super_node {
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		Object a = new Object();
 		
-		//schedule_action(this.all_nodes.get(1), "printActualState", a, false, 0);
-		//schedule_action(this.all_nodes.get(0), "printActualState", a, false, 0);
 		if(active_nodes.size() == this.max_number_of_nodes && !insert_done) {
 			if(this.stable) {
 				print(" ----------Entered the insert procedure----------- ");
@@ -1115,6 +1113,11 @@ public class Super_node {
 			}else {
 				print("waiting: " + this.stable_counter + "/3000");
 				this.stable_counter++;
+				/*
+				for(Node o : active_nodes) {
+					schedule_action(o, "printActualState", a, false, 1);
+				}
+				*/
 				if(this.stable_counter >= 3000) {
 					this.stable = true;
 				}
@@ -1168,7 +1171,6 @@ public class Super_node {
 	public void path_lengh_test() {
 		if(!this.test) {
 			this.test = true;
-			
 			//first of all schedule the join of the nodes and reach a stable state
 			for(int i = 0; i < this.max_number_of_nodes; i++) {
 				if(i == 0) {
@@ -1179,9 +1181,8 @@ public class Super_node {
 				}
 			}
 		}
-			
-		Random rand_generator = new Random();
 		
+		Random rand_generator = new Random();
 		ArrayList<Node> active_nodes = new ArrayList<Node>();
 		for(Node o: this.all_nodes) {
 			//if a node is active
@@ -1190,11 +1191,10 @@ public class Super_node {
 			}
 		}
 		
+		
 		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
 		Object a = new Object();
 		
-		//schedule_action(this.all_nodes.get(1), "printActualState", a, false, 0);
-		//schedule_action(this.all_nodes.get(0), "printActualState", a, false, 0);
 		if(active_nodes.size() == this.max_number_of_nodes && !insert_done) {
 			if(this.stable) {
 				print(" ----------Entered the insert procedure----------- ");
@@ -1243,13 +1243,13 @@ public class Super_node {
 			if(tick_count % this.fix_finger_tick == 0) {
 				schedule_action(o, "fixFingers", "", false, 1);
 				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-				}
+			}
 			
 			//check predecessor procedure
 			if(tick_count % this.stabilize_tick * 4 == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
-				}
+			}
 		}
 		
 		if(tick_count % 50 == 0) {
@@ -1260,14 +1260,14 @@ public class Super_node {
 			print("ACTIVE NODES: " + active_nodes.size());
 		}
 		
-		if(tick_count % 2999 == 0) {
+		if(tick_count % 3000 == 0) {
 			for(Node n : active_nodes) {
 				schedule_action(n, "printActualState", a, false, 1);
 			}
 		}
 	}
 	
-	@ScheduledMethod(start = 1, interval = 1)
+	//@ScheduledMethod(start = 1, interval = 1)
 	public void test_equal_range() {
 		if(!this.test) {
 			this.test = true;
