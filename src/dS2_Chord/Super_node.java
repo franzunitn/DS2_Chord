@@ -79,7 +79,7 @@ public class Super_node {
 	 * Method to execute one step of the super node where all the behavior of the node are schedule, 
 	 * for example fixfinger and stabilize method are schedule inside here.
 	 */
-	//@ScheduledMethod (start = 1, interval = 1)
+	@ScheduledMethod (start = 1, interval = 1)
 	public void step() {
 		print("---start step---");
 		Random randomSource = new Random();
@@ -263,10 +263,6 @@ public class Super_node {
 			if(tick_count % this.stabilize_tick*4 == 0) {
 				schedule_action(o, "check_predecessor", "", false, 1);
 				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
-			}
-			
-			if(tick_count % 10 == 0) {
-				schedule_action(o, "printActualState", o, false, 1);
 			}
 		}
 		print("---Finish step---");
@@ -545,67 +541,6 @@ public class Super_node {
 		}
 		
 		print("CURRENT ACTIVE NODES: " + active_nodes.size());
-	}
-	
-	
-	/**
-	 * test if a use correctly the fingertable
-	 */
-	//@ScheduledMethod (start = 1, interval = 1)
-	public void test_finger() {
-		Object a = new Object();
-		if(!this.test) {
-			this.test = true;
-			
-			//test if some nodes leave in order
-			if(true) {
-				schedule_action(this.all_nodes.get(0), "join", this.all_nodes.get(0), true, 2);
-				int tick = 3;
-				
-				//all others
-				for (int i = 1; i < this.all_nodes.size(); i++) {
-					schedule_action(this.all_nodes.get(i), "join", this.all_nodes.get(0), false, tick);
-					tick = tick + 5;
-				}
-				//print status
-				schedule_action(this.all_nodes.get(0), "printActualState", a, false, 10000);
-				
-			}
-		}
-		
-		
-		ArrayList<Node> active_nodes = new ArrayList<Node>();
-		for(Node o: this.all_nodes) {
-			//if a node is active
-			if(o.get_state() == 0) {
-				active_nodes.add(o);
-			}
-		}
-
-		int tick_count = (int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
-		
-		for(Node o : active_nodes) {
-			//check if it is the time to schedule a stabilize
-			if(tick_count % this.stabilize_tick == 0) {
-				
-				schedule_action(o, "stabilize", a, false, 1);
-				//print("Node: " + d.get(o.getId()) + " schedule a stabilize");
-			}
-			
-			//check if is the time to schedule a fixFingers
-			if(tick_count % this.fix_finger_tick == 0) {
-				schedule_action(o, "fixFingers", "", false, 1);
-				//print("Node: " + d.get(o.getId()) + " schedule a fixFingers");
-
-			}
-			
-			//check predecessor procedure
-			if(tick_count % (this.stabilize_tick * 5) == 0) {
-				schedule_action(o, "check_predecessor", "", false, 1);
-				//print("Node: " + d.get(o.getId()) + " schedule check_predecessor");
-
-			}
-		}
 	}
 	
 	/**
@@ -1197,7 +1132,7 @@ public class Super_node {
 		}
 	}
 	
-	@ScheduledMethod(start = 1, interval = 1)
+	//@ScheduledMethod(start = 1, interval = 1)
 	public void path_lengh_test() {
 		if(!this.test) {
 			this.finish = 1;
@@ -1381,7 +1316,6 @@ public class Super_node {
 	
 	public void on_lookup_completed(LookupCompletedMessage m) {
 		this.lookup_completed.add(m.pathLengh);
-		print("PathLenght added: actual size: " + this.lookup_completed.size());
 	}
 	
 	public void printPathLengh() {
