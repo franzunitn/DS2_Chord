@@ -210,6 +210,8 @@ public class Node{
 					System.err.println("CLOSEST IS NULL BUT CLOSEST PROCEDURE HAS RETURN THIS");
 				}
 				schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
+				//add edge of the join network 
+				addEdge("joinNetwork", this, closest_preceding_node(target_id));
 				
 			}else if(closest.getId().compareTo(this.successor.getId()) == 0) {
 				//case the target_id is between me and my successor 
@@ -223,26 +225,6 @@ public class Node{
 				System.err.println(" \t Node: " + this.getSuperNodeNameForMe() + " has receive a request to find successor of: " + 
 									m.source.getSuperNodeNameForMe());
 			}
-			
-			
-			/*
-			if (closest != null) {
-				
-				print("Node: " + this.getSuperNodeNameForMe() + " know the successor of   " + 
-						m.source.getSuperNodeNameForMe() +
-						" so reply to him with " + closest.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
-				
-				schedule_message(m.source, "on_receive_join_reply", this, 1);
-				//addEdge("joinNetwork", this, m.source);
-				return;
-			}
-			
-			print("Node: " + this.getSuperNodeNameForMe() + " doesn't know the successor so foreward the request to: " + 
-					this.successor.getSuperNodeNameForMe(), logs_types.VERYVERBOSE);
-			
-			//forward message to closest preceding node by schedule a message Find_successor_message
-			schedule_message(closest_preceding_node(target_id), "on_find_successor_receive", m, 1);
-			addEdge("joinNetwork", this, closest_preceding_node(target_id));*/
 		}
 	}
 	
@@ -576,7 +558,6 @@ public class Node{
 				" search in his finger table the successor of : " + 
 				id, logs_types.VERBOSE);
 		
-		//for(int i = this.fingertable.getDimension()-1; i > 0; i--) {
 		for(int i = this.fingertable.getM()-1; i > 0; i--) {
 			if(check_interval(this.id, id, this.fingertable.getIndex(i), false, false)) {
 				
@@ -836,7 +817,7 @@ public class Node{
 				}
 				else {
 					//Print the message for the object if it's not found
-					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + ", Object [" + key + "] NOT FOUND", logs_types.MINIMAL);
+					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + ", Object [" + key + "] NOT FOUND", logs_types.VERBOSE);
 					return;
 				}
 			}
@@ -858,13 +839,14 @@ public class Node{
 			//My successor is not the right node that will handle the key
 			else {
 				//Search for the correct node in the closest preceding nodes
-				Node closest = closest_preceding_node(key);
+				Node closest = target == null ? closest_preceding_node(key) : this.successor;
 				//If I'm choosen like closest preceding node there is a problem
+				/*
 				if(this.getId().compareTo(this.id) == 0) {
 					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but I don't have the object, so:"
 							+ "\n\tObject [" + key + "] NOT FOUND, this is clearly a strange situation :muble:", logs_types.MINIMAL);
 					return;
-				}
+				}*/
 				print("LOOKUP, Node: " + this.getSuperNodeNameForMe()
 					+ ", I send a look up message to node " + closest.getSuperNodeNameForMe()
 					+ " to handle the key requested", logs_types.VERBOSE);
@@ -876,7 +858,7 @@ public class Node{
 		}
 		else {
 			//Message for the user
-			print("Node: " + this.getSuperNodeNameForMe() + ", I'm not active, I cannot lookup", log_level.VERBOSE);
+			print("Node: " + this.getSuperNodeNameForMe() + ", I'm not active, I cannot lookup", logs_types.VERBOSE);
 		}
 	}
 	
@@ -919,6 +901,7 @@ public class Node{
 			}
 			print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
 				+ " the key we are looking for is not in my interval", logs_types.VERYVERBOSE);
+			
 			Node target = find_successor(m.key);
 			if(target != null && this.id.compareTo(target.getId()) != 0) {
 				//If the successor is available use it and send the message to it
@@ -932,14 +915,7 @@ public class Node{
 				addEdge("lookupNetwork", this, target);
 			}
 			else {
-				Node closest = closest_preceding_node(m.key);
-				if(this.getId().compareTo(target.getId()) == 0) {
-					print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but I don't have the object, so:"
-							+ "\n\tObject [" + m.key + "] NOT FOUND, this is clearly a strange situation :muble:", logs_types.MINIMAL);
-					look_up_reply_message lurm = new look_up_reply_message(this, false);
-					schedule_message(m.source, "on_look_up_reply_message_receive", lurm, 1);
-					return;
-				}
+				Node closest = target == null ? closest_preceding_node(m.key) : this.successor;
 				print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
 					+ ", I send a look up message to node " + closest.getSuperNodeNameForMe()
 					+ " to handle the key requested", logs_types.VERBOSE);

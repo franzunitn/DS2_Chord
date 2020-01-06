@@ -4,6 +4,8 @@ import dS2_Chord.Node;
 import dS2_Chord.Key;
 
 import java.awt.print.Printable;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -1272,7 +1274,7 @@ public class Super_node {
 				Node random_node = active_nodes.get(random_number);
 				
 				//schedule the lookup to the key
-				schedule_action(random_node, "lookup", key, false, 1);
+				schedule_action(random_node, "lookup", key, false, 1 + rand_generator.nextInt(100));
 				count++;
 				if(count % 1000 == 0) {
 					print("" + count /1000 + " /" + this.keys.size()/1000);
@@ -1379,13 +1381,23 @@ public class Super_node {
 	
 	public void on_lookup_completed(LookupCompletedMessage m) {
 		this.lookup_completed.add(m.pathLengh);
+		print("PathLenght added: actual size: " + this.lookup_completed.size());
 	}
 	
 	public void printPathLengh() {
+		print("" + this.lookup_completed.size());
+		String path_list = this.lookup_completed.toString();
+		//open file writer
+		FileWriter fw;
+		try {
+			fw = new FileWriter("path_lengh.csv");
+			fw.write(path_list);
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		};
 		
-		for(Integer i : this.lookup_completed) {
-			print("" +i);
-		}
 	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {

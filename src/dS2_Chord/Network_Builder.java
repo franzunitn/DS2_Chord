@@ -143,55 +143,6 @@ public class Network_Builder implements ContextBuilder<Object> {
 			current_nodes.add(n);
 		}
 		
-		/*
-		//read the ids from csv
-		boolean is_first = true;
-		List<BigInteger> records = new ArrayList<BigInteger>();
-		try (BufferedReader br = new BufferedReader(new FileReader("ids.csv"))) {
-		    String line;
-		    while ((line = br.readLine()) != null) {
-		    	if(is_first) {
-		    		is_first = false;
-		    	}else {
-		    		String[] values = line.split(",");
-			        records.add(new BigInteger(values[0]));
-		    	}
-		        
-		    }
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-		}
-		
-		//maually assign the id read from csv
-		for(int i = 0 ; i < nodes ; i++) {
-			BigInteger new_id = records.get(i);
-			System.out.println(new_id.toString());
-			Node n = new Node(new_id);
-			//add the node to the list
-			current_nodes.add(n);
-		}*/
-		
-		/*
-		//MANUALLY create some node with closer range of id to test fixfinger
-		BigInteger max = BigInteger.ZERO.setBit(160).subtract(BigInteger.ONE);
-		BigInteger number_node = BigInteger.valueOf(nodes);
-		BigInteger constant_increment = max.divide(number_node); 
-		for (int i = 0; i < nodes; i++) {
-			//BigInteger next = new BigInteger("" + i);
-			//create the new key
-			//BigInteger new_key = next.multiply(BigInteger.TEN).multiply(BigInteger.TEN);
-			BigInteger new_key = constant_increment.multiply(BigInteger.valueOf(i));
-			//create a new node
-			System.out.println(new_key.toString());
-			Node n = new Node(new_key);
-			//add the node to the list
-			current_nodes.add(n);
-		}*/
-		
 		//sort the node by key to construct the ring topology
 		Collections.sort(current_nodes, new Comparator<Node>() {
 			@Override
