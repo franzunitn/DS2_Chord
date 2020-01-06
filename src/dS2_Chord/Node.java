@@ -827,6 +827,11 @@ public class Node{
 					schedule_message(this, "remove_yellow", null, 3);
 					//Print a message for the object if it's found
 					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + ", Object [" + key + "] FOUND", logs_types.MINIMAL);
+					
+					LookupCompletedMessage m = new LookupCompletedMessage(key);
+					m.pathLengh += 1;
+					schedule_super_message(this.snode, "on_lookup_completed", m, 1);
+					
 					return;
 				}
 				else {
@@ -840,7 +845,8 @@ public class Node{
 			Node target = find_successor(key);
 			//Prepare the message
 			look_up_message lum = new look_up_message(this, key);
-			if(target != null) {
+			lum.pathlengh += 1;
+			if(target != null && target.getId().compareTo(this.id) != 0) {
 				//If the successor is available use it and send the message to it
 				print("LOOKUP, Node: " + this.getSuperNodeNameForMe()
 						+ ", I send a look up message to node " + target.getSuperNodeNameForMe()
@@ -854,7 +860,7 @@ public class Node{
 				//Search for the correct node in the closest preceding nodes
 				Node closest = closest_preceding_node(key);
 				//If I'm choosen like closest preceding node there is a problem
-				if(this.getId().equals(closest.getId())) {
+				if(this.getId().compareTo(this.id) == 0) {
 					print("LOOKUP, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but I don't have the object, so:"
 							+ "\n\tObject [" + key + "] NOT FOUND, this is clearly a strange situation :muble:", logs_types.MINIMAL);
 					return;
@@ -892,6 +898,11 @@ public class Node{
 						+ m.source.getSuperNodeNameForMe() + ") to comuncate the positeve handling", logs_types.VERBOSE);
 					look_up_reply_message lurm = new look_up_reply_message(this, true);
 					schedule_message(m.source, "on_look_up_reply_message_receive", lurm, 1);
+					
+					LookupCompletedMessage lucm = new LookupCompletedMessage(m.key);
+					lucm.pathLengh = m.pathlengh + 1;
+					//schedule a message to the super node
+					schedule_super_message(this.snode, "on_lookup_completed", lucm, 1);
 					//messagge to the source i find the key
 					addEdge("keyFindedNetwork", this, m.source);
 					return;
@@ -909,18 +920,20 @@ public class Node{
 			print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
 				+ " the key we are looking for is not in my interval", logs_types.VERYVERBOSE);
 			Node target = find_successor(m.key);
-			if(target != null) {
+			if(target != null && this.id.compareTo(target.getId()) != 0) {
 				//If the successor is available use it and send the message to it
 				print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
 					+ ", I send a look up message to node " + target.getSuperNodeNameForMe()
 					+ " to look for the key requested", logs_types.VERBOSE);
+				//increment the pathlengh
+				m.pathlengh += 1;
 				schedule_message(target, "on_look_up_message_receive", m, 1);
 				//add an edge for the lookup message 
 				addEdge("lookupNetwork", this, target);
 			}
 			else {
 				Node closest = closest_preceding_node(m.key);
-				if(this.getId().equals(closest.getId())) {
+				if(this.getId().compareTo(target.getId()) == 0) {
 					print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe() + " I'm the closest preceding node, but I don't have the object, so:"
 							+ "\n\tObject [" + m.key + "] NOT FOUND, this is clearly a strange situation :muble:", logs_types.MINIMAL);
 					look_up_reply_message lurm = new look_up_reply_message(this, false);
@@ -930,6 +943,8 @@ public class Node{
 				print("ON_LOOKUP_MSG, Node: " + this.getSuperNodeNameForMe()
 					+ ", I send a look up message to node " + closest.getSuperNodeNameForMe()
 					+ " to handle the key requested", logs_types.VERBOSE);
+				//increment the pathlengh
+				m.pathlengh += 1;
 				schedule_message(closest, "on_look_up_message_receive", m, 1);
 				//add an edge for the lookup message 
 				addEdge("lookupNetwork", this, closest);
@@ -1129,6 +1144,21 @@ public class Node{
 			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
 		}
 	}
+	
+	private static void schedule_super_message(Super_node target, String method, Object message, int delay) {
+		//schedule receive of a fins successor message in the next tick
+		if (message != null) {
+			double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method, message);
+		} else {
+			double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + delay); 
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, target, method);
+		}
+	}
+	
+	
 
 	public boolean is_join() {
 		return this.is_join;

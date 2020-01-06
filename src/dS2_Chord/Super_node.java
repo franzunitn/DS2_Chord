@@ -47,6 +47,8 @@ public class Super_node {
 	private int stable_counter;
 	private boolean stable;
 	private int finish;
+	private ArrayList <Integer> lookup_completed;
+	private boolean lookup_go;
 
 	public Super_node(float join_prob, float leave_prob, float fail_prob, float lookup_prob, int new_keys,
 			int max_number_of_nodes, ArrayList<Node> current_nodes,  int stabilize_tick, int fix_finger_tick,
@@ -67,6 +69,8 @@ public class Super_node {
 		this.stable_counter = 0;
 		this.stable = false;
 		this.finish = 0;
+		this.lookup_completed = new ArrayList <Integer>();
+		this.lookup_go = false;
 	}
 
 	/**
@@ -1050,7 +1054,7 @@ public class Super_node {
 	}
 	
 	
-	@ScheduledMethod(start = 1, interval = 1)
+	//@ScheduledMethod(start = 1, interval = 1)
 	public void num_key_per_node_test() {
 		if(!this.test) {
 			this.test = true;
@@ -1134,14 +1138,14 @@ public class Super_node {
 				this.finish = tick_count + 300;
 				RunEnvironment.getInstance().endAt(this.finish);
 			}else {
-				print("waiting: " + this.stable_counter + "/3000");
+				print("waiting: " + this.stable_counter + "/1000");
 				this.stable_counter++;
 				/*
 				for(Node o : active_nodes) {
 					schedule_action(o, "printActualState", a, false, 1);
 				}
 				*/
-				if(this.stable_counter >= 3000) {
+				if(this.stable_counter >= 1000) {
 					this.stable = true;
 				}
 				
@@ -1191,9 +1195,10 @@ public class Super_node {
 		}
 	}
 	
-	//@ScheduledMethod(start = 1, interval = 1)
+	@ScheduledMethod(start = 1, interval = 1)
 	public void path_lengh_test() {
 		if(!this.test) {
+			this.finish = 1;
 			this.test = true;
 			//first of all schedule the join of the nodes and reach a stable state
 			for(int i = 0; i < this.max_number_of_nodes; i++) {
@@ -1240,7 +1245,6 @@ public class Super_node {
 				}
 				print(" ----------Exit the insert procedure----------- ");
 				this.finish = tick_count + 300;
-				RunEnvironment.getInstance().endAt(this.finish);
 			}else {
 				print("waiting: " + this.stable_counter + "/3000");
 				this.stable_counter++;
@@ -1250,9 +1254,38 @@ public class Super_node {
 				
 			}
 		}else {
-			if(active_nodes.size() == this.max_number_of_nodes) {
+			if(active_nodes.size() == this.max_number_of_nodes && !this.lookup_go) {
 				print("Mancano: " + (this.finish - tick_count) + " Tick");
+				if(this.finish - tick_count == 0) {
+					this.lookup_go = true;
+					print("KEY TO LOOK : " + this.keys.size());
+				}
 			}
+		}
+		
+		if(this.lookup_go) {
+			print("-----------START LOOKUP-----------");
+			int count = 0;
+			for(BigInteger key : this.keys) {
+				//select a random active node
+				int random_number = rand_generator.nextInt(active_nodes.size());
+				Node random_node = active_nodes.get(random_number);
+				
+				//schedule the lookup to the key
+				schedule_action(random_node, "lookup", key, false, 1);
+				count++;
+				if(count % 1000 == 0) {
+					print("" + count /1000 + " /" + this.keys.size()/1000);
+				}
+			}
+			print("-----------END LOOKUP-----------");
+			double current_tick = RunEnvironment.getInstance().getCurrentSchedule().getTickCount();
+			ScheduleParameters params = ScheduleParameters.createOneTime(current_tick + 298); 
+			print(" Scheduled the print at tick : " + current_tick + 298);
+			print(" Scheduled the Finish at tick : " + current_tick + 300);
+			RunEnvironment.getInstance().getCurrentSchedule().schedule(params, this, "printPathLengh");
+			RunEnvironment.getInstance().endAt(tick_count + 300);
+			this.lookup_go = false;
 		}
 		
 		for(Node o : active_nodes) {
@@ -1276,18 +1309,8 @@ public class Super_node {
 			}
 		}
 		
-		if(tick_count % 50 == 0) {
-			schedule_action(this.all_nodes.get(0), "printActualStateMinimal", a, false, 1);
-		}
-		
 		if(active_nodes.size() < this.max_number_of_nodes) {
 			print("ACTIVE NODES: " + active_nodes.size());
-		}
-		
-		if(tick_count % 3000 == 0) {
-			for(Node n : active_nodes) {
-				schedule_action(n, "printActualState", a, false, 1);
-			}
 		}
 	}
 	
@@ -1354,7 +1377,16 @@ public class Super_node {
 		print("ACTIVE NODES: " + active_nodes.size());
 	}
 	
+	public void on_lookup_completed(LookupCompletedMessage m) {
+		this.lookup_completed.add(m.pathLengh);
+	}
 	
+	public void printPathLengh() {
+		
+		for(Integer i : this.lookup_completed) {
+			print("" +i);
+		}
+	}
 	
 	private static void schedule_action(Node target, String method, Object parameters , boolean is_first, int delay) {
 		//schedule receive of a fins successor message in the next tick
