@@ -21,27 +21,29 @@ percentage_occupation_1000 = c()
 graph <- c()
 percentage <- c()
 
+for (obj in csv_obj_30_nodes$range_id) {
+  percentage_occupation_30 <- c(percentage_occupation_30, (obj*100)/total_keys)
+  graph <- c(graph, "30 nodes")
+  percentage <- c(percentage, (obj*100)/total_keys)
+}
+
 for (obj in csv_obj_100_nodes$range_id) {
   percentage_occupation_100 <- c(percentage_occupation_100, (obj*100)/total_keys)
-  graph <- c(graph, "100_nodes")
+  graph <- c(graph, "100 nodes")
   percentage <- c(percentage, (obj*100)/total_keys)
 }
 
 for (obj in csv_obj_1000_nodes$range_id) {
   percentage_occupation_1000 <- c(percentage_occupation_1000, (obj*100)/total_keys)
-  graph <- c(graph, "1000_nodes")
+  graph <- c(graph, "1000 nodes")
   percentage <- c(percentage, (obj*100)/total_keys)
 }
 
-for (obj in csv_obj_30_nodes$range_id) {
-  percentage_occupation_30 <- c(percentage_occupation_30, (obj*100)/total_keys)
-  graph <- c(graph, "30_nodes")
-  percentage <- c(percentage, (obj*100)/total_keys)
-}
+percentage_dataframe <- data.frame("nnodes" = graph, "percent" = percentage)
 
-percentage_dataframe <- data.frame(graph, percentage)
+percentage_dataframe$nnodes = with(percentage_dataframe, reorder(nnodes, percent))
 
-ggplot(percentage_dataframe, aes(x = graph, y = percentage)) +
+ggplot(percentage_dataframe, aes(x = nnodes, y = percent)) +
   geom_boxplot()+ theme_classic() +
   labs(x = "Topology dimension", y = "Competence percentage on the total ring [%]", 
        title = "Competence range of nodes")+ 
@@ -49,9 +51,3 @@ ggplot(percentage_dataframe, aes(x = graph, y = percentage)) +
         axis.title.x = element_text(face="bold", size = 17),
         axis.title.y = element_text(face="bold", size = 17),
         axis.text = element_text(size = 14))
-
-boxplot(data.frame(Topology30 = percentage_occupation_30), data.frame(Topology100 = percentage_occupation_100), data.frame(Topology1000 = percentage_occupation_1000),
-        main="Competence range of nodes",
-        xlab="Topology dimension",
-        ylab="Competence percentage on the total ring [%]",
-        cex.lab = 1.35, cex.axis = 1.35, cex.main = 1.7)
